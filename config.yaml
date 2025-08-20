@@ -22,7 +22,7 @@ redis:
     #是否使用redis集群模式
     useCluster: false
     #使用集群模式addr和db默认无效
-    addr: r-2ze35e4jqm0fjehwhz.redis.rds.aliyuncs.com:6379
+    addr: 192.168.3.167:6321
     password: ""
     db: 1
     clusterAddrs:
@@ -41,11 +41,6 @@ redis-list:
           - "172.21.0.3:7000"
           - "172.21.0.4:7001"
           - "172.21.0.2:7002"
-
-
-
-
-
 # system configuration
 system:
     env: local # 修改为public可以关闭路由日志输出
