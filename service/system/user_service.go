@@ -3,7 +3,6 @@ package system
 import (
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
@@ -22,12 +21,10 @@ var UserServiceApp = new(UserService)
 
 func (userService *UserService) Register(u system.SysUser) (userInter system.SysUser, err error) {
 	var user system.SysUser
-	if !errors.Is(global.GVA_DB.Where("username = ?", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+	if !errors.Is(global.GVA_DB.Where("username = ?", u.UserName).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
 		return userInter, errors.New("用户名已注册")
 	}
-	// 否则 附加uuid 密码hash加密 注册
-	u.Password = utils.BcryptHash(u.Password)
-	u.UUID = uuid.New()
+	u.UserPwd = utils.BcryptHash(u.UserPwd)
 	err = global.GVA_DB.Create(&u).Error
 	return u, err
 }
@@ -43,9 +40,9 @@ func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysU
 		return nil, fmt.Errorf("db not init")
 	}
 	var user system.SysUser
-	err = global.GVA_DB.Where("username = ?", u.Username).First(&user).Error
+	err = global.GVA_DB.Where("username = ?", u.UserName).First(&user).Error
 	if err == nil {
-		if ok := utils.BcryptCheck(u.Password, user.Password); !ok {
+		if ok := utils.BcryptCheck(u.UserPwd, user.UserPwd); !ok {
 			return nil, errors.New("密码错误")
 		}
 	}

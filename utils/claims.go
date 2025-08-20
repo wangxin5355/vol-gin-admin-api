@@ -2,7 +2,6 @@ package utils
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
@@ -64,7 +63,7 @@ func GetClaims(c *gin.Context) (*systemReq.CustomClaims, error) {
 }
 
 // GetUserID 从Gin的Context中获取从jwt解析出来的用户ID
-func GetUserID(c *gin.Context) uint64 {
+func GetUserID(c *gin.Context) uint32 {
 	if claims, exists := c.Get("claims"); !exists {
 		if cl, err := GetClaims(c); err != nil {
 			return 0
@@ -77,33 +76,19 @@ func GetUserID(c *gin.Context) uint64 {
 	}
 }
 
-// GetUserUuid 从Gin的Context中获取从jwt解析出来的用户UUID
-func GetUserUuid(c *gin.Context) uuid.UUID {
-	if claims, exists := c.Get("claims"); !exists {
-		if cl, err := GetClaims(c); err != nil {
-			return uuid.UUID{}
-		} else {
-			return cl.UUID
-		}
-	} else {
-		waitUse := claims.(*systemReq.CustomClaims)
-		return waitUse.UUID
-	}
-}
-
 // GetUserAuthorityId 从Gin的Context中获取从jwt解析出来的用户角色id
-func GetUserAuthorityId(c *gin.Context) uint {
-	if claims, exists := c.Get("claims"); !exists {
-		if cl, err := GetClaims(c); err != nil {
-			return 0
-		} else {
-			return cl.AuthorityId
-		}
-	} else {
-		waitUse := claims.(*systemReq.CustomClaims)
-		return waitUse.AuthorityId
-	}
-}
+//func GetUserAuthorityId(c *gin.Context) uint {
+//	if claims, exists := c.Get("claims"); !exists {
+//		if cl, err := GetClaims(c); err != nil {
+//			return 0
+//		} else {
+//			return cl.AuthorityId
+//		}
+//	} else {
+//		waitUse := claims.(*systemReq.CustomClaims)
+//		return waitUse.AuthorityId
+//	}
+//}
 
 // GetUserInfo 从Gin的Context中获取从jwt解析出来的用户角色id
 func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
@@ -133,28 +118,13 @@ func GetUserName(c *gin.Context) string {
 	}
 }
 
-// TokenID 从Gin的Context中获取从jwt解析出来的TokenId
-func GetTokenID(c *gin.Context) string {
-	if claims, exists := c.Get("claims"); !exists {
-		if cl, err := GetClaims(c); err != nil {
-			return ""
-		} else {
-			return cl.TokenId
-		}
-	} else {
-		waitUse := claims.(*systemReq.CustomClaims)
-		return waitUse.TokenId
-	}
-}
-
 func LoginToken(user system.Login) (token string, claims systemReq.CustomClaims, err error) {
 	j := NewJWT()
 	claims = j.CreateClaims(systemReq.BaseClaims{
-		UUID:        user.GetUUID(),
-		ID:          user.GetUserId(),
-		NickName:    user.GetNickname(),
-		Username:    user.GetUsername(),
-		AuthorityId: user.GetAuthorityId(),
+		ID:       user.GetUserId(),
+		Username: user.GetUsername(),
+		Role_Ids: user.GetRoleIds(),
+		DeptIds:  user.GetDeptIds(),
 	})
 	token, err = j.CreateToken(claims)
 	return

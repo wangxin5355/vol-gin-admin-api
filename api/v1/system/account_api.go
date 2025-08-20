@@ -41,7 +41,7 @@ func (b *AccountApi) Login(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	u := &system.SysUser{Username: l.Username, Password: l.Password}
+	u := &system.SysUser{UserName: l.Username, UserPwd: l.Password}
 	user, err := userService.Login(u)
 	if err != nil {
 		global.GVA_LOG.Error("登陆失败! 用户名不存在或者密码错误!", zap.Error(err))
@@ -76,9 +76,9 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 	//	}, "登录成功", c)
 	//	return
 	//}
-
-	if jwtStr, err := jwtService.GetRedisJWT(user.Username); err == redis.Nil {
-		if err := jwtService.SetRedisJWT(token, user.Username); err != nil {
+	//先从redis查询已经存在的token，如果没有就直接存入新的，
+	if jwtStr, err := jwtService.GetRedisJWT(int(user.User_Id)); err == redis.Nil {
+		if err := jwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
 			global.GVA_LOG.Error("设置登录状态失败!", zap.Error(err))
 			response.FailWithMessage("设置登录状态失败", c)
 			return
@@ -89,17 +89,16 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 			Token:     token,
 			ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
 		}, "登录成功", c)
-	} else if err != nil {
+	} else if err != nil { //取老token报错，直接失败
 		global.GVA_LOG.Error("设置登录状态失败!", zap.Error(err))
 		response.FailWithMessage("设置登录状态失败", c)
 	} else {
-		//从token解析出tokenid
-		tokenid := utils.GetTokenID(c)
-		if err := jwtService.AddInBlacklist(tokenid, jwtStr); err != nil {
+		//老token放入黑名单
+		if err := jwtService.AddInBlacklist(jwtStr); err != nil {
 			response.FailWithMessage("jwt作废失败", c)
 			return
 		}
-		if err := jwtService.SetRedisJWT(token, user.GetUsername()); err != nil {
+		if err := jwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
 			response.FailWithMessage("设置登录状态失败", c)
 			return
 		}
@@ -132,7 +131,7 @@ func (b *AccountApi) Register(c *gin.Context) {
 		return
 	}
 
-	user := &system.SysUser{Username: r.Username, NickName: r.NickName, Password: r.Password, HeaderImg: r.HeaderImg, Enable: r.Enable, Phone: r.Phone, Email: r.Email}
+	user := &system.SysUser{UserName: r.Username, UserPwd: r.Password, HeadImageUrl: r.HeaderImg, Enable: r.Enable, Mobile: r.Phone, Email: r.Email}
 	userReturn, err := userService.Register(*user)
 	if err != nil {
 		global.GVA_LOG.Error("注册失败!", zap.Error(err))

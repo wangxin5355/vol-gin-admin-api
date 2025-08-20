@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
+	"strconv"
 )
 
 type JwtService struct{}
@@ -16,14 +17,14 @@ var JwtServiceApp = new(JwtService)
 //@param: string tokenid
 //@return: err error
 
-func (jwtService *JwtService) AddInBlacklist(tokenid string, jwt string) (err error) {
+func (jwtService *JwtService) AddInBlacklist(jwt string) (err error) {
 	//TODO 往RedisSet里面加
 	dr, err := utils.ParseDuration(global.GVA_CONFIG.JWT.ExpiresTime)
 	if err != nil {
 		return err
 	}
 	timer := dr
-	err = global.GVA_REDIS.Set(context.Background(), "TokenBlacklist:"+tokenid, jwt, timer).Err()
+	err = global.GVA_REDIS.SAdd(context.Background(), "TokenBlacklist", jwt, timer).Err()
 	return err
 }
 
@@ -33,16 +34,12 @@ func (jwtService *JwtService) AddInBlacklist(tokenid string, jwt string) (err er
 //@param: tokenid string
 //@return: bool
 
-func (jwtService *JwtService) IsBlacklist(tokenid string) bool {
-	exists, err := global.GVA_REDIS.Exists(context.Background(), "TokenBlacklist:"+tokenid).Result()
+func (jwtService *JwtService) IsBlacklist(jwt string) bool {
+	exists, err := global.GVA_REDIS.SIsMember(context.Background(), "TokenBlacklist", jwt).Result()
 	if err != nil {
 		panic(err)
 	}
-	if exists == 1 {
-		return true
-	} else {
-		return false
-	}
+	return exists
 
 }
 
@@ -52,8 +49,8 @@ func (jwtService *JwtService) IsBlacklist(tokenid string) bool {
 //@param: userName string
 //@return: redisJWT string, err error
 
-func (jwtService *JwtService) GetRedisJWT(userName string) (redisJWT string, err error) {
-	redisJWT, err = global.GVA_REDIS.Get(context.Background(), userName).Result()
+func (jwtService *JwtService) GetRedisJWT(userId int) (redisJWT string, err error) {
+	redisJWT, err = global.GVA_REDIS.Get(context.Background(), strconv.Itoa(userId)).Result()
 	return redisJWT, err
 }
 
@@ -63,13 +60,13 @@ func (jwtService *JwtService) GetRedisJWT(userName string) (redisJWT string, err
 //@param: jwt string, userName string
 //@return: err error
 
-func (jwtService *JwtService) SetRedisJWT(jwt string, userName string) (err error) {
+func (jwtService *JwtService) SetRedisJWT(jwt string, userId int) (err error) {
 	// 此处过期时间等于jwt过期时间
 	dr, err := utils.ParseDuration(global.GVA_CONFIG.JWT.ExpiresTime)
 	if err != nil {
 		return err
 	}
 	timer := dr
-	err = global.GVA_REDIS.Set(context.Background(), userName, jwt, timer).Err()
+	err = global.GVA_REDIS.Set(context.Background(), strconv.Itoa(userId), jwt, timer).Err()
 	return err
 }

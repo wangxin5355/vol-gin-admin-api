@@ -7,9 +7,9 @@ import (
 	"go.uber.org/zap"
 )
 
-// @title                       Gin-cli Swagger API接口文档
+// @title                       vol-gin-admin-api Swagger API接口文档
 // @version                     v1.0.0
-// @description                 使用gin快速开api脚手架
+// @description                 vol快速开发框架基于go语言gin框架实现
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
 // @name                        x-token

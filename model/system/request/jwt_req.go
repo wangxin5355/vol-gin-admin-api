@@ -2,7 +2,6 @@ package request
 
 import (
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 // CustomClaims structure
@@ -13,10 +12,8 @@ type CustomClaims struct {
 }
 
 type BaseClaims struct {
-	UUID        uuid.UUID
-	ID          uint64
-	Username    string
-	NickName    string
-	AuthorityId uint
-	TokenId     string
+	ID       uint32 //用户id
+	Username string
+	Role_Ids string //角色集合
+	DeptIds  string //部门集合
 }

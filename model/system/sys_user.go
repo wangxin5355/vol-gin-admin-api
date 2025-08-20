@@ -1,56 +1,72 @@
 package system
 
 import (
-	"github.com/google/uuid"
-	"github.com/wangxin5355/vol-gin-admin-api/model"
+	"time"
 )
 
 type Login interface {
-	GetUsername() string
-	GetNickname() string
-	GetUUID() uuid.UUID
-	GetUserId() uint64
-	GetAuthorityId() uint
+	GetRoleIds() string
+	GetDeptIds() string
+	GetUserId() uint32
 	GetUserInfo() any
+	GetUsername() string
 }
 
 var _ Login = new(SysUser)
 
 type SysUser struct {
-	model.BaseModel
-	UUID        uuid.UUID `json:"uuid" gorm:"index;comment:用户UUID"`                                                     // 用户UUID
-	Username    string    `json:"userName" gorm:"index;comment:用户登录名"`                                                  // 用户登录名
-	Password    string    `json:"-"  gorm:"comment:用户登录密码"`                                                             // 用户登录密码
-	NickName    string    `json:"nickName" gorm:"default:系统用户;comment:用户昵称"`                                            // 用户昵称
-	HeaderImg   string    `json:"headerImg" gorm:"default:https://qmplusimg.henrongyi.top/gva_header.jpg;comment:用户头像"` // 用户头像
-	AuthorityId uint      `json:"authorityId" gorm:"default:888;comment:用户角色ID"`                                        // 用户角色ID
-	Phone       string    `json:"phone"  gorm:"comment:用户手机号"`                                                          // 用户手机号
-	Email       string    `json:"email"  gorm:"comment:用户邮箱"`                                                           // 用户邮箱
-	Enable      int       `json:"enable" gorm:"default:1;comment:用户是否被冻结 1正常 2冻结"`                                      //用户是否被冻结 1正常 2冻结
+	User_Id            uint32    `json:"user_Id" gorm:"primarykey" `
+	Role_Ids           string    `json:"role_Ids" gorm:"comment:用户角色"`
+	RoleName           string    `json:"roleName" gorm:"default:无;comment:角色名称，废弃"`
+	PhoneNo            string    `json:"phoneNo" gorm:"comment:电话"`
+	Remark             string    `json:"remark" gorm:"comment:备注"`
+	Tel                string    `json:"tel" gorm:"comment:电话"`
+	UserName           string    `json:"userName" gorm:"comment:用户名"`
+	UserPwd            string    `json:"-"  gorm:"comment:用户登录密码"`
+	UserTrueName       string    `json:"userTrueName" gorm:"comment:用户真是名称"`
+	DeptName           string    `json:"deptName" gorm:"comment:部门名称"`
+	Dept_Id            uint32    `json:"dept_Id" gorm:"comment:部门id"` // 用户登录密码
+	Email              string    `json:"email" gorm:"comment:邮件"`
+	Enable             int       `json:"enable" gorm:"comment:是否可用"`
+	Gender             int       `json:"gender" gorm:"comment:性别"`
+	HeadImageUrl       string    `json:"headImageUrl" gorm:"default:https://qmplusimg.henrongyi.top/gva_header.jpg;comment:用户头像"`
+	IsRegregisterPhone int       `json:"isRegregisterPhone" gorm:"comment:是否注册手机"`
+	LastLoginDate      time.Time `json:"lastLoginDate"  gorm:"comment:最后登录时间"`
+	LastModifyPwdDate  time.Time `json:"lastModifyPwdDate"  gorm:"comment:最后修改密码时间"`
+	Address            string    `json:"address" gorm:"comment:地址"`
+	AppType            int       `json:"appType" gorm:"comment:app类型"`
+	AuditStatus        time.Time `json:"auditStatus"  gorm:"comment:审核时间"`
+	Auditor            int       `json:"auditor"  gorm:"comment:审核人"`
+	OrderNo            int       `json:"orderNo"  gorm:"comment:排序号？"`
+	Token              string    `json:"-"  gorm:"comment:用户token"`
+	CreateID           int       `json:"createID"  gorm:"comment:创建人"`
+	CreateDate         time.Time `json:"createDate"  gorm:"comment:创建时间"`
+	Creator            string    `json:"creator"  gorm:"comment:创建人名称？"`
+	Mobile             string    `json:"mobile"  gorm:"comment:手机号"`
+	Modifier           string    `json:"modifier"  gorm:"comment:修改人名称？"`
+	ModifyDate         time.Time `json:"modifyDate"  gorm:"comment:修改时间"`
+	ModifyID           int       `json:"modifyID"  gorm:"comment:修改人id"`
+	DeptIds            string    `json:"deptIds"  gorm:"comment:组织架构"`
 }
 
 func (SysUser) TableName() string {
-	return "sys_users"
+	return "sys_user"
+}
+
+func (s *SysUser) GetRoleIds() string {
+	return s.Role_Ids
+}
+
+func (s *SysUser) GetDeptIds() string {
+	return s.DeptIds
 }
 
 func (s *SysUser) GetUsername() string {
-	return s.Username
+	return s.UserName
 }
 
-func (s *SysUser) GetNickname() string {
-	return s.NickName
-}
-
-func (s *SysUser) GetUUID() uuid.UUID {
-	return s.UUID
-}
-
-func (s *SysUser) GetUserId() uint64 {
-	return s.ID
-}
-
-func (s *SysUser) GetAuthorityId() uint {
-	return s.AuthorityId
+func (s *SysUser) GetUserId() uint32 {
+	return s.User_Id
 }
 
 func (s *SysUser) GetUserInfo() any {

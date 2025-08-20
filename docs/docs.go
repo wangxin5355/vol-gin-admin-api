@@ -276,49 +276,96 @@ const docTemplate = `{
         "system.SysUser": {
             "type": "object",
             "properties": {
-                "ID": {
-                    "description": "主键ID",
-                    "type": "integer"
-                },
-                "authorityId": {
-                    "description": "用户角色ID",
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "description": "创建时间",
+                "address": {
                     "type": "string"
                 },
+                "appType": {
+                    "type": "integer"
+                },
+                "auditStatus": {
+                    "type": "string"
+                },
+                "auditor": {
+                    "type": "integer"
+                },
+                "createDate": {
+                    "type": "string"
+                },
+                "createID": {
+                    "type": "integer"
+                },
+                "creator": {
+                    "type": "string"
+                },
+                "deptIds": {
+                    "type": "string"
+                },
+                "deptName": {
+                    "type": "string"
+                },
+                "dept_Id": {
+                    "description": "用户登录密码",
+                    "type": "integer"
+                },
                 "email": {
-                    "description": "用户邮箱",
                     "type": "string"
                 },
                 "enable": {
-                    "description": "用户是否被冻结 1正常 2冻结",
                     "type": "integer"
                 },
-                "headerImg": {
-                    "description": "用户头像",
+                "gender": {
+                    "type": "integer"
+                },
+                "headImageUrl": {
                     "type": "string"
                 },
-                "nickName": {
-                    "description": "用户昵称",
+                "isRegregisterPhone": {
+                    "type": "integer"
+                },
+                "lastLoginDate": {
                     "type": "string"
                 },
-                "phone": {
-                    "description": "用户手机号",
+                "lastModifyPwdDate": {
                     "type": "string"
                 },
-                "updatedAt": {
-                    "description": "更新时间",
+                "mobile": {
+                    "type": "string"
+                },
+                "modifier": {
+                    "type": "string"
+                },
+                "modifyDate": {
+                    "type": "string"
+                },
+                "modifyID": {
+                    "type": "integer"
+                },
+                "orderNo": {
+                    "type": "integer"
+                },
+                "phoneNo": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "roleName": {
+                    "type": "string"
+                },
+                "role_Ids": {
+                    "type": "string"
+                },
+                "tel": {
                     "type": "string"
                 },
                 "userName": {
-                    "description": "用户登录名",
                     "type": "string"
                 },
-                "uuid": {
-                    "description": "用户UUID",
+                "userTrueName": {
                     "type": "string"
+                },
+                "user_Id": {
+                    "type": "integer"
                 }
             }
         }
@@ -338,8 +385,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "Gin-cli Swagger API接口文档",
-	Description:      "使用gin快速开api脚手架",
+	Title:            "vol-gin-admin-api Swagger API接口文档",
+	Description:      "vol快速开发框架基于go语言gin框架实现",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
