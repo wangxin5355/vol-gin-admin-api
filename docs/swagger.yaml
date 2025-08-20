@@ -1,0 +1,206 @@
+definitions:
+  request.LoginReq:
+    properties:
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    type: object
+  request.Register:
+    properties:
+      email:
+        example: 电子邮箱
+        type: string
+      enable:
+        example: int 是否启用
+        type: string
+      headerImg:
+        example: 头像链接
+        type: string
+      nickName:
+        example: 昵称
+        type: string
+      passWord:
+        example: 密码
+        type: string
+      phone:
+        example: 电话号码
+        type: string
+      userName:
+        example: 用户名
+        type: string
+    type: object
+  response.LoginResp:
+    properties:
+      expiresAt:
+        type: integer
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/system.SysUser'
+    type: object
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  response.SysUserResp:
+    properties:
+      user:
+        $ref: '#/definitions/system.SysUser'
+    type: object
+  system.SysUser:
+    properties:
+      ID:
+        description: 主键ID
+        type: integer
+      authorityId:
+        description: 用户角色ID
+        type: integer
+      createdAt:
+        description: 创建时间
+        type: string
+      email:
+        description: 用户邮箱
+        type: string
+      enable:
+        description: 用户是否被冻结 1正常 2冻结
+        type: integer
+      headerImg:
+        description: 用户头像
+        type: string
+      nickName:
+        description: 用户昵称
+        type: string
+      phone:
+        description: 用户手机号
+        type: string
+      updatedAt:
+        description: 更新时间
+        type: string
+      userName:
+        description: 用户登录名
+        type: string
+      uuid:
+        description: 用户UUID
+        type: string
+    type: object
+info:
+  contact: {}
+  description: 使用gin快速开api脚手架
+  title: Gin-cli Swagger API接口文档
+  version: v1.0.0
+paths:
+  /acc/login:
+    post:
+      parameters:
+      - description: 用户名, 密码, 验证码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 返回包括用户信息,token,过期时间
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.LoginResp'
+                msg:
+                  type: string
+              type: object
+      summary: 用户登录
+      tags:
+      - Base
+  /example/Test:
+    get:
+      parameters:
+      - description: 用户ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取meta信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: string
+                msg:
+                  type: string
+              type: object
+      summary: 测试1
+      tags:
+      - ExampleTest
+  /example/Test1:
+    get:
+      parameters:
+      - description: 用户ID
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取meta信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  type: string
+                msg:
+                  type: string
+              type: object
+      summary: 测试2
+      tags:
+      - ExampleTest
+  /user/admin_register:
+    post:
+      parameters:
+      - description: 用户名, 昵称, 密码, 角色ID
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 用户注册账号,返回包括用户信息
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.SysUserResp'
+                msg:
+                  type: string
+              type: object
+      summary: 用户注册账号
+      tags:
+      - SysUser
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: x-token
+    type: apiKey
+swagger: "2.0"
