@@ -31,3 +31,4 @@ go.work.sum
 # .idea/
 # .vscode/
 /log/2025-08-20/*.log
+docs
