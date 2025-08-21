@@ -28,7 +28,7 @@ func main() {
 	initialize.OtherInit()
 
 	if global.GVA_DB != nil {
-		initialize.RegisterTables() // 初始化表
+		//initialize.RegisterTables() // 手动脚本初始化，不再自动化初始化表
 		// 程序结束前关闭数据库链接
 		db, _ := global.GVA_DB.DB()
 		defer db.Close()

@@ -21,7 +21,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Base"
+                    "AccountApi"
                 ],
                 "summary": "用户登录",
                 "parameters": [
@@ -48,6 +48,51 @@ const docTemplate = `{
                                     "properties": {
                                         "data": {
                                             "$ref": "#/definitions/response.LoginResp"
+                                        },
+                                        "msg": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/acc/register": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AccountApi"
+                ],
+                "summary": "用户注册账号",
+                "parameters": [
+                    {
+                        "description": "用户名, 昵称, 密码, 角色ID",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Register"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "用户注册账号,返回包括用户信息",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.SysUserResp"
                                         },
                                         "msg": {
                                             "type": "string"
@@ -145,51 +190,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/user/admin_register": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SysUser"
-                ],
-                "summary": "用户注册账号",
-                "parameters": [
-                    {
-                        "description": "用户名, 昵称, 密码, 角色ID",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.Register"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "用户注册账号,返回包括用户信息",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/response.SysUserResp"
-                                        },
-                                        "msg": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -207,37 +207,7 @@ const docTemplate = `{
             }
         },
         "request.Register": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "电子邮箱"
-                },
-                "enable": {
-                    "type": "string",
-                    "example": "int 是否启用"
-                },
-                "headerImg": {
-                    "type": "string",
-                    "example": "头像链接"
-                },
-                "nickName": {
-                    "type": "string",
-                    "example": "昵称"
-                },
-                "passWord": {
-                    "type": "string",
-                    "example": "密码"
-                },
-                "phone": {
-                    "type": "string",
-                    "example": "电话号码"
-                },
-                "userName": {
-                    "type": "string",
-                    "example": "用户名"
-                }
-            }
+            "type": "object"
         },
         "response.LoginResp": {
             "type": "object",
@@ -282,11 +252,14 @@ const docTemplate = `{
                 "appType": {
                     "type": "integer"
                 },
-                "auditStatus": {
+                "auditDate": {
                     "type": "string"
                 },
-                "auditor": {
+                "auditStatus": {
                     "type": "integer"
+                },
+                "auditor": {
+                    "type": "string"
                 },
                 "createDate": {
                     "type": "string"

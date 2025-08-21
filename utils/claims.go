@@ -68,11 +68,11 @@ func GetUserID(c *gin.Context) uint32 {
 		if cl, err := GetClaims(c); err != nil {
 			return 0
 		} else {
-			return cl.BaseClaims.ID
+			return cl.BaseClaims.UserID
 		}
 	} else {
 		waitUse := claims.(*systemReq.CustomClaims)
-		return waitUse.BaseClaims.ID
+		return waitUse.BaseClaims.UserID
 	}
 }
 
@@ -121,7 +121,7 @@ func GetUserName(c *gin.Context) string {
 func LoginToken(user system.Login) (token string, claims systemReq.CustomClaims, err error) {
 	j := NewJWT()
 	claims = j.CreateClaims(systemReq.BaseClaims{
-		ID:       user.GetUserId(),
+		UserID:   user.GetUserId(),
 		Username: user.GetUsername(),
 		Role_Ids: user.GetRoleIds(),
 		DeptIds:  user.GetDeptIds(),

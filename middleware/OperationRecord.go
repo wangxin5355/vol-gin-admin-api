@@ -56,8 +56,8 @@ func OperationRecord() gin.HandlerFunc {
 			body, _ = json.Marshal(&m)
 		}
 		claims, _ := utils.GetClaims(c)
-		if claims != nil && claims.BaseClaims.ID != 0 {
-			userId = int(claims.BaseClaims.ID)
+		if claims != nil && claims.BaseClaims.UserID != 0 {
+			userId = int(claims.BaseClaims.UserID)
 		} else {
 			id, err := strconv.Atoi(c.Request.Header.Get("x-user-id"))
 			if err != nil {

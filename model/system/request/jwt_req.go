@@ -12,7 +12,7 @@ type CustomClaims struct {
 }
 
 type BaseClaims struct {
-	ID       uint32 //用户id
+	UserID   uint32 //用户id
 	Username string
 	Role_Ids string //角色集合
 	DeptIds  string //部门集合

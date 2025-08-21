@@ -35,8 +35,9 @@ type SysUser struct {
 	LastModifyPwdDate  time.Time `json:"lastModifyPwdDate"  gorm:"comment:最后修改密码时间"`
 	Address            string    `json:"address" gorm:"comment:地址"`
 	AppType            int       `json:"appType" gorm:"comment:app类型"`
-	AuditStatus        time.Time `json:"auditStatus"  gorm:"comment:审核时间"`
-	Auditor            int       `json:"auditor"  gorm:"comment:审核人"`
+	AuditDate          time.Time `json:"auditDate"  gorm:"comment:审核时间"`
+	AuditStatus        int       `json:"auditStatus"  gorm:"comment:审核状态"`
+	Auditor            string    `json:"auditor"  gorm:"comment:审核人名称"`
 	OrderNo            int       `json:"orderNo"  gorm:"comment:排序号？"`
 	Token              string    `json:"-"  gorm:"comment:用户token"`
 	CreateID           int       `json:"createID"  gorm:"comment:创建人"`

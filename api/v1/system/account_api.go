@@ -21,7 +21,7 @@ var userService = service.ServiceGroupApp.SystemServiceGroup.UserService
 var jwtService = service.ServiceGroupApp.SystemServiceGroup.JwtService
 
 // Login
-// @Tags     Base
+// @Tags     AccountApi
 // @Summary  用户登录
 // @Produce   application/json
 // @Param    data  body      systemReq.LoginReq   true  "用户名, 密码, 验证码"
@@ -112,12 +112,12 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 }
 
 // Register
-// @Tags     SysUser
+// @Tags     AccountApi
 // @Summary  用户注册账号
 // @Produce   application/json
 // @Param    data  body      systemReq.Register          true  "用户名, 昵称, 密码, 角色ID"
 // @Success  200   {object}  response.Response{data=systemRes.SysUserResp,msg=string}  "用户注册账号,返回包括用户信息"
-// @Router   /user/admin_register [post]
+// @Router   /acc/register [post]
 func (b *AccountApi) Register(c *gin.Context) {
 	var r systemReq.Register
 	err := c.ShouldBindJSON(&r)

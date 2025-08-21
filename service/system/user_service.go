@@ -40,7 +40,7 @@ func (userService *UserService) Login(u *system.SysUser) (userInter *system.SysU
 		return nil, fmt.Errorf("db not init")
 	}
 	var user system.SysUser
-	err = global.GVA_DB.Where("username = ?", u.UserName).First(&user).Error
+	err = global.GVA_DB.Where("UserName = ?", u.UserName).First(&user).Error
 	if err == nil {
 		if ok := utils.BcryptCheck(u.UserPwd, user.UserPwd); !ok {
 			return nil, errors.New("密码错误")

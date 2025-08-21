@@ -18,7 +18,6 @@ var JwtServiceApp = new(JwtService)
 //@return: err error
 
 func (jwtService *JwtService) AddInBlacklist(jwt string) (err error) {
-	//TODO 往RedisSet里面加
 	dr, err := utils.ParseDuration(global.GVA_CONFIG.JWT.ExpiresTime)
 	if err != nil {
 		return err
