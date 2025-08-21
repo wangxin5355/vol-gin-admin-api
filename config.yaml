@@ -22,7 +22,7 @@ redis:
     #是否使用redis集群模式
     useCluster: false
     #使用集群模式addr和db默认无效
-    addr: 192.168.3.167:6321
+    addr: 192.168.3.112:6480
     password: ""
     db: 1
     clusterAddrs:

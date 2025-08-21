@@ -24,7 +24,7 @@ var jwtService = service.ServiceGroupApp.SystemServiceGroup.JwtService
 // @Tags     AccountApi
 // @Summary  用户登录
 // @Produce   application/json
-// @Param    data  body      systemReq.LoginReq   true  "用户名, 密码, 验证码"
+// @Param    data  body      systemReq.LoginReq  true  "用户名, 密码"
 // @Success  200   {object}  response.Response{data=systemRes.LoginResp,msg=string}  "返回包括用户信息,token,过期时间"
 // @Router   /acc/login [post]
 func (b *AccountApi) Login(c *gin.Context) {
@@ -115,7 +115,7 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 // @Tags     AccountApi
 // @Summary  用户注册账号
 // @Produce   application/json
-// @Param    data  body      systemReq.Register          true  "用户名, 昵称, 密码, 角色ID"
+// @Param    data  body     systemReq.Register   true  "用户名, 昵称, 密码, 角色ID"
 // @Success  200   {object}  response.Response{data=systemRes.SysUserResp,msg=string}  "用户注册账号,返回包括用户信息"
 // @Router   /acc/register [post]
 func (b *AccountApi) Register(c *gin.Context) {
