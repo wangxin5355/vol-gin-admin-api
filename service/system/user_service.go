@@ -3,6 +3,7 @@ package system
 import (
 	"errors"
 	"fmt"
+
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
@@ -25,6 +26,7 @@ func (userService *UserService) Register(u system.SysUser) (userInter system.Sys
 		return userInter, errors.New("用户名已注册")
 	}
 	u.UserPwd = utils.BcryptHash(u.UserPwd)
+	u.RoleName = "无"
 	err = global.GVA_DB.Create(&u).Error
 	return u, err
 }

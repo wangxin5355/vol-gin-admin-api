@@ -17,7 +17,7 @@ var _ Login = new(SysUser)
 type SysUser struct {
 	User_Id            uint32    `json:"user_Id" gorm:"primarykey" `
 	Role_Ids           string    `json:"role_Ids" gorm:"comment:用户角色"`
-	RoleName           string    `json:"roleName" gorm:"default:无;comment:角色名称，废弃"`
+	RoleName           string    `json:"RoleName" gorm:"column:RoleName;default:无;comment:角色名称，废弃"`
 	PhoneNo            string    `json:"phoneNo" gorm:"comment:电话"`
 	Remark             string    `json:"remark" gorm:"comment:备注"`
 	Tel                string    `json:"tel" gorm:"comment:电话"`
