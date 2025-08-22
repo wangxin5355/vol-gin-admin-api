@@ -10,9 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// 基础实体接口
-type BaseEntity interface{}
-
 // 响应内容
 type WebResponseContent struct {
 	Status  bool
@@ -76,7 +73,7 @@ type SearchParameters struct {
 	DisplayType string
 }
 
-// 从参数转换为 GORM 查询条件
+// ApplyJsonWhereToDB 从参数转换为 GORM 查询条件
 func ApplyJsonWhereToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	jsonStr := options.Wheres
 	var params []SearchParameters
@@ -114,7 +111,7 @@ func ApplyJsonWhereToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	return db.Where(where, args...)
 }
 
-// 解析为排序语句
+// ApplyJsonSortToDB 解析为排序语句
 func ApplyJsonSortToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	if options.Sort == "" || options.Order == "" {
 		return db
@@ -123,7 +120,7 @@ func ApplyJsonSortToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	return db.Order(order)
 }
 
-// 分页语句解析
+// ApplyJsonPageToDB 分页语句解析
 func ApplyJsonPageToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	if options.Page <= 0 {
 		options.Page = 1
@@ -135,7 +132,7 @@ func ApplyJsonPageToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	return db.Offset(offset).Limit(options.Rows)
 }
 
-// 将参数转换为条件、排序、分页等数据
+// ApplyJsonToDB 将参数转换为条件、排序、分页等数据
 func ApplyJsonToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	db = ApplyJsonWhereToDB(db, options)
 	db = ApplyJsonSortToDB(db, options)
@@ -143,7 +140,7 @@ func ApplyJsonToDB(db *gorm.DB, options PageDataOptions) *gorm.DB {
 	return db
 }
 
-// 传入一个实体，将其转换为 GORM 的映射对象
+// GetPageData 传入一个实体，将其转换为 GORM 的映射对象
 func GetPageData[T any](options PageDataOptions) *PageGridData[T] {
 	var list []T
 	var total int64

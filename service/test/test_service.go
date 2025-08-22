@@ -9,7 +9,7 @@ import (
 type TestService struct {
 }
 
-// 重写GetPageData方法
+// GetPageData 获取分页数据
 func (s *TestService) GetPageData(options provider.PageDataOptions) *provider.PageGridData[system.SysUser] {
 	// 调用父类方法：return s.ServiceBase.GetPageData(options)
 	//limit := options.Rows
@@ -23,7 +23,7 @@ func (s *TestService) GetPageData(options provider.PageDataOptions) *provider.Pa
 	//db.Find(&userLise)
 	//return &provider.PageGridData[system.SysUser]{
 	//	Rows:  userLise,
-	//	Total: 100, // 假设总数为100，实际应用中你需要从数据库获取总数
+	//	Total: 100,
 	//}
 	return provider.GetPageData[system.SysUser](options)
 }
