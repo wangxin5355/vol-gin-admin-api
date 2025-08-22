@@ -1,11 +1,16 @@
 package initialize
 
 import (
+	"log"
+	"os"
+	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/wangxin5355/vol-gin-admin-api/config"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -16,6 +21,15 @@ func Config(prefix string, singular bool) *gorm.Config {
 			SingularTable: singular, // 是否禁用复数
 			NoLowerCase:   true,
 		},
+		Logger: logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags), // 输出到控制台
+			logger.Config{
+				SlowThreshold:             200 * time.Millisecond, // 慢 SQL 阈值
+				LogLevel:                  logger.Info,            // 日志级别
+				IgnoreRecordNotFoundError: true,                   // 忽略未找到错误
+				Colorful:                  true,                   // 彩色输出
+			},
+		),
 	}
 }
 func GormMysql() *gorm.DB {
