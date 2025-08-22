@@ -9,6 +9,7 @@ type Register struct {
 	Enable    int    `json:"enable"`
 	Phone     string `json:"phone" example:"电话号码"`
 	Email     string `json:"email" example:"电子邮箱"`
+	RoleIds   string `json:"roleIds" example:"角色ID,多个逗号分隔"` // 角色ID,多个逗号分隔
 }
 
 // Login User login structure

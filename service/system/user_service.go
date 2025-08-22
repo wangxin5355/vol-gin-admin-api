@@ -25,17 +25,16 @@ func (userService *UserService) Register(u system.SysUser) (userInter system.Sys
 	if !errors.Is(global.GVA_DB.Where("username = ?", u.UserName).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
 		return userInter, errors.New("用户名已注册")
 	}
+	//生成六位随机包含数字和字母的密码
+	newPwd := utils.GenerateRandomNumber(6)
 	key := global.GVA_CONFIG.Secret.User
-	pwd, err := utils.EncryptAES(u.UserPwd, key)
+	pwd, err := utils.EncryptAES(newPwd, key)
 	if err != nil {
 		return userInter, err
 	}
-	// if pwd != "j79rYYvCz4vdhcboB1Ausg==" {
-	// 	return u, errors.New("密码错误")
-	// }
 	u.UserPwd = pwd
 	u.RoleName = "无"
-	//err = global.GVA_DB.Create(&u).Error
+	err = global.GVA_DB.Create(&u).Error
 	return u, err
 }
 
