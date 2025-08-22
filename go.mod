@@ -3,6 +3,8 @@ module github.com/wangxin5355/vol-gin-admin-api
 go 1.24.0
 
 require (
+	github.com/casbin/casbin/v2 v2.103.0
+    github.com/casbin/gorm-adapter/v3 v3.32.0
 	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-sql-driver/mysql v1.8.1
