@@ -9,10 +9,11 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/service"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"time"
 )
 
 type AccountApi struct{}
@@ -131,7 +132,7 @@ func (b *AccountApi) Register(c *gin.Context) {
 		return
 	}
 
-	user := &system.SysUser{UserName: r.Username, UserPwd: r.Password, HeadImageUrl: r.HeaderImg, Enable: r.Enable, Mobile: r.Phone, Email: r.Email}
+	user := &system.SysUser{UserName: r.Username, UserPwd: r.Password, HeadImageUrl: r.HeaderImg, Enable: r.Enable, Mobile: r.Phone, Email: r.Email, Role_Ids: r.RoleIds}
 	userReturn, err := userService.Register(*user)
 	if err != nil {
 		global.GVA_LOG.Error("注册失败!", zap.Error(err))

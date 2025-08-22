@@ -1,12 +1,13 @@
 package internal
 
 import (
+	"time"
+
 	"github.com/wangxin5355/vol-gin-admin-api/config"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
-	"time"
 )
 
 var Gorm = new(_gorm)

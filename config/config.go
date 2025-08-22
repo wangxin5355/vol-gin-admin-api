@@ -14,4 +14,6 @@ type Server struct {
 	DBList []SpecializedDB `mapstructure:"db-list" json:"db-list" yaml:"db-list"`
 	// 跨域配置
 	Cors CORS `mapstructure:"cors" json:"cors" yaml:"cors"`
+	// vol中的秘钥配置
+	Secret Secret `mapstructure:"secret" json:"secret" yaml:"secret"`
 }

@@ -1,112 +1,113 @@
-
 # jwt configuration
 jwt:
-    signing-key: ginvol
-    expires-time: 7d
-    buffer-time: 1d
-    issuer: ginvol
+  signing-key: ginvol
+  expires-time: 7d
+  buffer-time: 1d
+  issuer: ginvol
 # zap logger configuration
 zap:
-    level: info
-    format: console
-    prefix: "gin-vol"
-    director: log
-    show-line: true
-    encode-level: LowercaseColorLevelEncoder
-    stacktrace-key: stacktrace
-    log-in-console: true
-    retention-day: -1
+  level: info
+  format: console
+  prefix: 'gin-vol'
+  director: log
+  show-line: true
+  encode-level: LowercaseColorLevelEncoder
+  stacktrace-key: stacktrace
+  log-in-console: true
+  retention-day: -1
 
 # redis configuration
 redis:
-    #是否使用redis集群模式
-    useCluster: false
-    #使用集群模式addr和db默认无效
-    addr: 192.168.3.112:6480
-    password: ""
-    db: 1
-    clusterAddrs:
-        - "172.21.0.3:7000"
-        - "172.21.0.4:7001"
-        - "172.21.0.2:7002"
+  #是否使用redis集群模式
+  useCluster: false
+  #使用集群模式addr和db默认无效
+  addr: 192.168.3.112:6480
+  password: ''
+  db: 1
+  clusterAddrs:
+    - '172.21.0.3:7000'
+    - '172.21.0.4:7001'
+    - '172.21.0.2:7002'
 
 # redis-list configuration
 redis-list:
-    - name: cache           # 数据库的名称,注意: name 需要在 redis-list 中唯一
-      useCluster: false     # 是否使用redis集群模式
-      addr: 127.0.0.1:6379  # 使用集群模式addr和db默认无效
-      password: ""
-      db: 0
-      clusterAddrs:
-          - "172.21.0.3:7000"
-          - "172.21.0.4:7001"
-          - "172.21.0.2:7002"
+  - name: cache # 数据库的名称,注意: name 需要在 redis-list 中唯一
+    useCluster: false # 是否使用redis集群模式
+    addr: 127.0.0.1:6379 # 使用集群模式addr和db默认无效
+    password: ''
+    db: 0
+    clusterAddrs:
+      - '172.21.0.3:7000'
+      - '172.21.0.4:7001'
+      - '172.21.0.2:7002'
 # system configuration
 system:
-    env: local # 修改为public可以关闭路由日志输出
-    addr: 8888
-    db-type: mysql
-    use-redis: true # 使用redis
-    use-multipoint: false
-    # IP限制次数 一个小时15000次
-    iplimit-count: 15000
-    #  IP限制一个小时
-    iplimit-time: 3600
-    #  路由全局前缀
-    router-prefix: ""
-    #  严格角色模式 打开后权限将会存在上下级关系
-    use-strict-auth: false
-
-
+  env: local # 修改为public可以关闭路由日志输出
+  addr: 8888
+  db-type: mysql
+  use-redis: true # 使用redis
+  use-multipoint: false
+  # IP限制次数 一个小时15000次
+  iplimit-count: 15000
+  #  IP限制一个小时
+  iplimit-time: 3600
+  #  路由全局前缀
+  router-prefix: ''
+  #  严格角色模式 打开后权限将会存在上下级关系
+  use-strict-auth: false
 
 # mysql connect configuration
 mysql:
-    path: "192.168.3.215"
-    port: "3306"
-    config: "charset=utf8mb4&parseTime=True&loc=Local"
-    db-name: "gin"
-    username: "tjlh"
-    password: "L*P30wk|dvhdR"
+  path: '192.168.3.215'
+  port: '3306'
+  config: 'charset=utf8mb4&parseTime=True&loc=Local'
+  db-name: 'gin'
+  username: 'tjlh'
+  password: 'L*P30wk|dvhdR'
+  max-idle-conns: 10
+  max-open-conns: 100
+  log-mode: ''
+  log-zap: true
+db-list:
+  - disable: true # 是否禁用
+    type: '' # 数据库的类型,目前支持mysql、pgsql、mssql、oracle
+    alias-name: '' # 数据库的名称,注意: alias-name 需要在db-list中唯一
+    path: ''
+    port: ''
+    config: ''
+    db-name: ''
+    username: ''
+    password: ''
     max-idle-conns: 10
     max-open-conns: 100
-    log-mode: ""
-    log-zap: true
-db-list:
-    - disable: true # 是否禁用
-      type: "" # 数据库的类型,目前支持mysql、pgsql、mssql、oracle
-      alias-name: "" # 数据库的名称,注意: alias-name 需要在db-list中唯一
-      path: ""
-      port: ""
-      config: ""
-      db-name: ""
-      username: ""
-      password: ""
-      max-idle-conns: 10
-      max-open-conns: 100
-      log-mode: ""
-      log-zap: false
+    log-mode: ''
+    log-zap: false
 
 # autocode configuration
 autocode:
   web: web/src
-  root: "" # root 自动适配项目根目录, 请不要手动配置,他会在项目加载的时候识别出根路径
+  root: '' # root 自动适配项目根目录, 请不要手动配置,他会在项目加载的时候识别出根路径
   server: server
   module: 'gitee.com/cxpcloud_1246041320/gin-cli'
-  ai-path: ""  # API服务路径
+  ai-path: '' # API服务路径
 
 # 跨域配置
 # 需要配合 server/initialize/router.go -> `Router.Use(middleware.CorsByRules())` 使用
 cors:
-    mode: strict-whitelist # 放行模式: allow-all, 放行全部; whitelist, 白名单模式, 来自白名单内域名的请求添加 cors 头; strict-whitelist 严格白名单模式, 白名单外的请求一律拒绝
-    whitelist:
-        - allow-origin: example.com
-          allow-headers: Content-Type,AccessToken,X-CSRF-Token, Authorization, Token,X-Token,X-User-Id
-          allow-methods: POST, GET
-          expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
+  mode: strict-whitelist # 放行模式: allow-all, 放行全部; whitelist, 白名单模式, 来自白名单内域名的请求添加 cors 头; strict-whitelist 严格白名单模式, 白名单外的请求一律拒绝
+  whitelist:
+    - allow-origin: example.com
+      allow-headers: Content-Type,AccessToken,X-CSRF-Token, Authorization, Token,X-Token,X-User-Id
+      allow-methods: POST, GET
+      expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
 
-          allow-credentials: true # 布尔值
-        - allow-origin: example2.com
-          allow-headers: content-type
-          allow-methods: GET, POST
-          expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
-          allow-credentials: true # 布尔值
+      allow-credentials: true # 布尔值
+    - allow-origin: example2.com
+      allow-headers: content-type
+      allow-methods: GET, POST
+      expose-headers: Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type
+      allow-credentials: true # 布尔值
+
+# vol中的秘钥配置
+Secret:
+  User: C5ABA9E202D94C43A3CA66002BF77FAF
