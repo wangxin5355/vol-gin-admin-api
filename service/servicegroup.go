@@ -13,6 +13,7 @@ type SystemServiceGroup struct {
 	system.UserService
 	system.SystemConfigService
 	system.JwtService
+	system.CasbinService
 }
 
 var ServiceGroupApp = new(ServiceGroup)
