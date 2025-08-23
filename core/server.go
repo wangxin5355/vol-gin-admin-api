@@ -2,6 +2,9 @@ package core
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -10,8 +13,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/middleware"
 	"github.com/wangxin5355/vol-gin-admin-api/router"
 	"go.uber.org/zap"
-	"net/http"
-	"time"
 )
 
 type server interface {
@@ -26,7 +27,7 @@ func RunServer() {
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 	s := initServer(address, Router)
 	global.GVA_LOG.Info("server run success on ", zap.String("address", address))
-	fmt.Printf("默认自动化文档地址:http://127.0.0.1%s/swagger/index.html", address)
+	fmt.Printf("默认自动化文档地址:http://localhost%s/swagger/index.html", address)
 	global.GVA_LOG.Error(s.ListenAndServe().Error())
 }
 
@@ -49,6 +50,7 @@ func initRouters() *gin.Engine {
 	}
 	systemRouter := router.RouterGroupApp.System
 	exampleRouter := router.RouterGroupApp.Example
+	testRouter := router.RouterGroupApp.Test
 
 	//跨域设置
 	Router.Use(middleware.Cors()) // 直接放行全部跨域请求
@@ -77,6 +79,7 @@ func initRouters() *gin.Engine {
 		//exampleRouter.InitTestRouter(PrivateGroup )
 		//PublicGroup则不需要鉴权
 		exampleRouter.InitTestRouter(PublicGroup)
+		testRouter.InitTestRouter(PublicGroup)
 	}
 
 	global.GVA_ROUTERS = Router.Routes()
