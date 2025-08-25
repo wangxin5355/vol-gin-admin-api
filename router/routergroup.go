@@ -16,6 +16,7 @@ type ExampleRouterGroup struct {
 type SystemRouterGroup struct {
 	system.JwtRouter
 	system.AccountRouter
+	system.PermissionRouter
 }
 
 var RouterGroupApp = new(RouterGroup)

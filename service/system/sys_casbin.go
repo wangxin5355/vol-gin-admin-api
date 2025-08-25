@@ -1,7 +1,9 @@
 package system
 
 import (
+	"fmt"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
+	"log"
 )
 
 type CasbinService struct{}
@@ -31,12 +33,12 @@ func (s *CasbinService) GetUserRoles(userID string) ([]string, error) {
 }
 
 // 检查用户权限（支持多角色）
-func (s *CasbinService) CheckPermission(userID, menuID, action string) (bool, error) {
+func (s *CasbinService) CheckPermission(userID string, menuID, action string) (bool, error) {
 	return utils.GetCasbin().Enforce(userID, menuID, action)
 }
 
 // 为角色添加菜单权限
-func (s *CasbinService) AddMenuPermission(roleID, menuID string, actions []string) error {
+func (s *CasbinService) AddMenuPermission(roleID string, menuID string, actions []string) error {
 	for _, action := range actions {
 		_, err := utils.GetCasbin().AddPolicy(roleID, menuID, action, "allow")
 		if err != nil {
@@ -47,7 +49,7 @@ func (s *CasbinService) AddMenuPermission(roleID, menuID string, actions []strin
 }
 
 // 移除角色的菜单权限
-func (s *CasbinService) RemoveMenuPermission(roleID, menuID string, actions []string) error {
+func (s *CasbinService) RemoveMenuPermission(roleID string, menuID string, actions []string) error {
 	for _, action := range actions {
 		_, err := utils.GetCasbin().RemovePolicy(roleID, menuID, action, "allow")
 		if err != nil {
@@ -58,7 +60,7 @@ func (s *CasbinService) RemoveMenuPermission(roleID, menuID string, actions []st
 }
 
 // 获取角色对某个菜单的所有权限
-func (s *CasbinService) GetRoleMenuPermissions(roleID, menuID string) ([]string, error) {
+func (s *CasbinService) GetRoleMenuPermissions(roleID string, menuID string) ([]string, error) {
 	policies, err := utils.GetCasbin().GetFilteredPolicy(0, roleID, menuID)
 	if err != nil {
 		return nil, err
@@ -70,4 +72,14 @@ func (s *CasbinService) GetRoleMenuPermissions(roleID, menuID string) ([]string,
 		}
 	}
 	return actions, nil
+}
+
+// 删除角色所有菜单权限
+func (s *CasbinService) RemoveMenuPermissionsByRole(roleID string) (bool, error) {
+	removed, err := utils.GetCasbin().RemoveFilteredPolicy(0, roleID)
+	if err != nil {
+		return false, fmt.Errorf("failed to remove role menu permissions: %v", err)
+	}
+	log.Printf("Removed %t permissions for role %s ", removed, roleID)
+	return removed, nil
 }
