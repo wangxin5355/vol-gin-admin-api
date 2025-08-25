@@ -1,0 +1,17 @@
+# air.toml 配置文件
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main.exe main.go"
+bin = "tmp/main.exe"
+include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml"]
+exclude_dir = ["assets", "tmp", "vendor", "testdata", "docs"]
+delay = 1000
+kill_delay = 500
+pre_cmd = ["swag init --parseInternal --parseDependency -g main.go"]
+
+[log]
+level = "debug"   # 可选: debug, info, warn, error
+color = true
+time = true

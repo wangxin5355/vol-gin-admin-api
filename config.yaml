@@ -56,32 +56,32 @@ system:
   #  严格角色模式 打开后权限将会存在上下级关系
   use-strict-auth: false
 
-# mysql connect configuration
-mysql:
-  path: '192.168.3.215'
-  port: '3306'
-  config: 'charset=utf8mb4&parseTime=True&loc=Local'
-  db-name: 'gin'
-  username: 'tjlh'
-  password: 'L*P30wk|dvhdR'
-  max-idle-conns: 10
-  max-open-conns: 100
-  log-mode: ''
-  log-zap: true
+## mysql connect configuration
+#mysql:
+#  path: '192.168.3.215'
+#  port: '3306'
+#  config: 'charset=utf8mb4&parseTime=True&loc=Local'
+#  db-name: 'gin'
+#  username: 'tjlh'
+#  password: 'L*P30wk|dvhdR'
+#  max-idle-conns: 10
+#  max-open-conns: 100
+#  log-mode: ''
+#  log-zap: true
 db-list:
-  - disable: true # 是否禁用
-    type: '' # 数据库的类型,目前支持mysql、pgsql、mssql、oracle
-    alias-name: '' # 数据库的名称,注意: alias-name 需要在db-list中唯一
-    path: ''
-    port: ''
-    config: ''
-    db-name: ''
-    username: ''
-    password: ''
+  - disable: false # 是否禁用
+    type: 'mysql' # 数据库的类型,目前支持mysql、pgsql、mssql、oracle
+    alias-name: 'gin' # 数据库的名称,注意: alias-name 需要在db-list中唯一
+    path: '192.168.3.215'
+    port: '3306'
+    config: 'charset=utf8mb4&parseTime=True&loc=Local'
+    db-name: 'gin'
+    username: 'tjlh'
+    password: 'L*P30wk|dvhdR'
     max-idle-conns: 10
     max-open-conns: 100
     log-mode: ''
-    log-zap: false
+    log-zap: true
 
 # autocode configuration
 autocode:

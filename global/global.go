@@ -2,6 +2,8 @@ package global
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"github.com/songzhibin97/gkit/cache/local_cache"
@@ -10,7 +12,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/config"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"sync"
 )
 
 var (
@@ -34,6 +35,16 @@ func GetGlobalDBByDBName(dbname string) *gorm.DB {
 	lock.RLock()
 	defer lock.RUnlock()
 	return GVA_DBList[dbname]
+}
+
+// GetFirstDB 获取第一个db
+func GetFirstDB() *gorm.DB {
+	lock.RLock()
+	defer lock.RUnlock()
+	for _, db := range GVA_DBList {
+		return db
+	}
+	return nil
 }
 
 // MustGetGlobalDBByDBName 通过名称获取db 如果不存在则panic

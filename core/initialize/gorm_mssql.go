@@ -49,3 +49,23 @@ func GormMssqlByConfig(m config.Mssql) *gorm.DB {
 		return db
 	}
 }
+
+// GormMssqlWithConfig 支持根据 GeneralDB 初始化 MSSQL 数据库连接
+func GormMssqlWithConfig(general config.GeneralDB) (*gorm.DB, error) {
+	if general.Dbname == "" {
+		return nil, nil
+	}
+	dsn := "sqlserver://" + general.Username + ":" + general.Password + "@" + general.Path + ":" + general.Port + "?database=" + general.Dbname + "&" + general.Config
+	mssqlConfig := sqlserver.Config{
+		DSN:               dsn,
+		DefaultStringSize: 256,
+	}
+	db, err := gorm.Open(sqlserver.New(mssqlConfig), internal.Gorm.Config(general.Prefix, general.Singular))
+	if err != nil {
+		return nil, err
+	}
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(general.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(general.MaxOpenConns)
+	return db, nil
+}

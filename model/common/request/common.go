@@ -46,3 +46,28 @@ type GetAuthorityId struct {
 }
 
 type Empty struct{}
+
+// 分页参数
+type PageDataOptions struct {
+	Sort   string             `json:"sort"`
+	Order  string             `json:"order"`
+	Page   int                `json:"page"`
+	Rows   int                `json:"rows"`
+	Export bool               `json:"-"`
+	Filter []SearchParameters `json:"-"`
+	Wheres string             `json:"wheres"`
+	Value  any                `json:"value"`
+}
+
+type SearchParameters struct {
+	Name        string
+	Value       string
+	DisplayType string
+}
+
+// SaveModel 示例
+type SaveModel struct {
+	MainData   map[string]any   `json:"mainData"`   // 主表数据
+	DetailData []map[string]any `json:"detailData"` // 明细数据列表
+	DelKeys    []any            `json:"delKeys"`    // 删除的明细数据主键列表
+}
