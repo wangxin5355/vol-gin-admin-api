@@ -6,7 +6,6 @@ import (
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"github.com/wangxin5355/vol-gin-admin-api/service"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
-	"net/http"
 	"strconv"
 	"strings"
 )
@@ -42,7 +41,7 @@ func (api *PermissionApi) UpdateUserRoles(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	response.Ok(c)
+	response.Ok("更新用户角色成功", c)
 }
 
 // UpdateRolePermission
@@ -94,8 +93,33 @@ func (api *PermissionApi) UpdateRolePermission(c *gin.Context) {
 			return
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"code": 200,
-		"msg":  "角色菜单更新成功",
-	})
+	response.Ok("更新角色权限成功", c)
+}
+
+// CheckRolePermission
+// @Tags     PermissionApi
+// @Summary  检查角色权限
+// @Produce   application/json
+// @Param    data  body      systemReq.CheckRolePermissionReq  true  " "
+// @Success  200   {object}  response.Response{data=bool,msg=string}  "失败返回非0错误码"
+// @Router   /permission/CheckRolePermission [post]
+func (api *PermissionApi) CheckRolePermission(c *gin.Context) {
+	var req systemReq.CheckRolePermissionReq
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	err = utils.Verify(req, utils.CheckRolePermissionVerify)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	hasPermission, err1 := casbinService.CheckPermission(strconv.Itoa(req.RoleId), strconv.Itoa(req.MenuId), req.Action)
+	if err1 != nil {
+		response.FailWithMessage(err1.Error(), c)
+		return
+	}
+	response.OkWithData(hasPermission, c)
+
 }

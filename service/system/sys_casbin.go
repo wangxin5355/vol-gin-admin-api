@@ -32,8 +32,8 @@ func (s *CasbinService) GetUserRoles(userID string) ([]string, error) {
 	return utils.GetCasbin().GetRolesForUser(userID)
 }
 
-// 检查用户权限（支持多角色）
-func (s *CasbinService) CheckPermission(userID string, menuID, action string) (bool, error) {
+// 检查角色权限权限（支持多角色）
+func (s *CasbinService) CheckPermission(userID string, menuID string, action string) (bool, error) {
 	return utils.GetCasbin().Enforce(userID, menuID, action)
 }
 

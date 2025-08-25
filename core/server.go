@@ -69,7 +69,9 @@ func initRouters() *gin.Engine {
 		PublicGroup.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, "ok")
 		})
+
 	}
+	systemRouter.InitJwtRouter(PrivateGroup)
 	{
 		systemRouter.InitAccRouter(PublicGroup) // 注册Login,register 不需要鉴权的接口
 	}
@@ -80,6 +82,7 @@ func initRouters() *gin.Engine {
 		//PublicGroup则不需要鉴权
 		exampleRouter.InitTestRouter(PublicGroup)
 		testRouter.InitTestRouter(PublicGroup)
+		systemRouter.InitPermissionRouter(PublicGroup)
 	}
 
 	global.GVA_ROUTERS = Router.Routes()

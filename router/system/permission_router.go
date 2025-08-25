@@ -9,11 +9,12 @@ type PermissionRouter struct{}
 
 var permissionApi = api.ApiGroupApp.SystemApiGroup.PermissionApi
 
-func (s *PermissionRouter) InitAccRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+func (s *PermissionRouter) InitPermissionRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("permission")
 	{
 		baseRouter.POST("UpdateRolePermission", permissionApi.UpdateRolePermission)
 		baseRouter.POST("UpdateUserRoles", permissionApi.UpdateUserRoles)
+		baseRouter.POST("CheckRolePermission", permissionApi.CheckRolePermission)
 	}
 	return baseRouter
 }

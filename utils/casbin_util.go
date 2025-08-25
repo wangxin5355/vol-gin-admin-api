@@ -22,28 +22,32 @@ func GetCasbin() *casbin.SyncedCachedEnforcer {
 			zap.L().Error("适配数据库失败请检查casbin表是否为InnoDB引擎!", zap.Error(err))
 			return
 		}
-		text := `
-		[request_definition]
-		r = sub, obj, act
-		
-		[policy_definition]
-		p = sub, obj, act
-		
-		[role_definition]
-		g = _, _
-		
-		[policy_effect]
-		e = some(where (p.eft == allow))
-		
-		[matchers]
-		m = r.sub == p.sub && keyMatch2(r.obj,p.obj) && r.act == p.act
-		`
-		m, err := model.NewModelFromString(text)
+
+		m, err := model.NewModelFromString(`
+[request_definition]
+r = sub, obj, act
+
+[policy_definition]
+p = sub, obj, act,eft
+
+[role_definition]
+g = _, _
+
+[policy_effect]
+e = some(where (p.eft == allow))
+
+[matchers]
+m = g(r.sub, p.sub) && r.obj == p.obj && r.act == p.act
+`)
 		if err != nil {
 			zap.L().Error("字符串加载模型失败!", zap.Error(err))
 			return
 		}
-		syncedCachedEnforcer, _ = casbin.NewSyncedCachedEnforcer(m, a)
+		syncedCachedEnforcer, err = casbin.NewSyncedCachedEnforcer(m, a)
+		if err != nil {
+			zap.L().Error(err.Error(), zap.Error(err))
+			return
+		}
 		syncedCachedEnforcer.SetExpireTime(60 * 60)
 		_ = syncedCachedEnforcer.LoadPolicy()
 	})

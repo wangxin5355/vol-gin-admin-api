@@ -16,6 +16,12 @@ type UpdateRolePermissionReq struct {
 
 // 菜单权限
 type MenuAction struct {
-	MenuId  int      `json:"menuId"`                                                                  // 菜单ID
-	Actions []string `json:"actions" example:"[Search,Add,Delete,Update,Import,Export,Upload,Audit]"` // 菜单权限
+	MenuId  int      `json:"menuId"`                                                                // 菜单ID
+	Actions []string `json:"actions" example:"Search,Add,Delete,Update,Import,Export,Upload,Audit"` // 菜单权限
+}
+
+type CheckRolePermissionReq struct {
+	RoleId int    `json:"roleId"`
+	MenuId int    `json:"menuId"`
+	Action string `json:"action" example:"Search"` // 菜单权限
 }
