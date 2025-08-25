@@ -16,6 +16,7 @@ type ExampleApiGroup struct {
 type SystemApiGroup struct {
 	system.SystemApi
 	system.AccountApi
+	system.PermissionApi
 }
 
 var ApiGroupApp = new(ApiGroup)
