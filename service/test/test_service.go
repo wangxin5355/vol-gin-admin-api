@@ -16,9 +16,9 @@ import (
 //	return global.GetGlobalDBByDBName(string(initialize.DbGin))
 //}
 //
-//// GetPageData 获取分页数据
-//func (s *TestService) GetPageData(options request.PageDataOptions) *response.PageGridData[system.SysUser] {
-//	// 调用父类方法：return s.ServiceBase.GetPageData(options)
+//// getPageData 获取分页数据
+//func (s *TestService) getPageData(options request.PageDataOptions) *response.PageGridData[system.SysUser] {
+//	// 调用父类方法：return s.ServiceBase.getPageData(options)
 //	//limit := options.Rows
 //	//offset := (options.Page - 1) * limit
 //	//db := global.GVA_DB.Model(&system.SysUser{})
@@ -31,22 +31,22 @@ import (
 //	//return &provider.PageGridData[system.SysUser]{
 //	//	Rows:  userLise,
 //	//	Total: 100,
-//	return provider.GetPageData[system.SysUser](Db(), options)
+//	return provider.getPageData[system.SysUser](Db(), options)
 //}
 //
-//// Add 添加方法
-//func (s *TestService) Add(saveModel request.SaveModel) *response.WebResponseContent {
-//	return provider.Add[system.SysUser](Db(), saveModel)
+//// add 添加方法
+//func (s *TestService) add(saveModel request.SaveModel) *response.WebResponseContent {
+//	return provider.add[system.SysUser](Db(), saveModel)
 //}
 //
-//// Update 更新方法
-//func (s *TestService) Update(saveModel request.SaveModel) *response.WebResponseContent {
-//	return provider.Update[system.SysUser](Db(), saveModel)
+//// update 更新方法
+//func (s *TestService) update(saveModel request.SaveModel) *response.WebResponseContent {
+//	return provider.update[system.SysUser](Db(), saveModel)
 //}
 //
-//// Del 删除方法
-//func (s *TestService) Del(keys []any) *response.WebResponseContent {
-//	return provider.Del[system.SysUser](Db(), keys)
+//// del 删除方法
+//func (s *TestService) del(keys []any) *response.WebResponseContent {
+//	return provider.del[system.SysUser](Db(), keys)
 //}
 
 // TestService 继承 BaseService[SysUser]
