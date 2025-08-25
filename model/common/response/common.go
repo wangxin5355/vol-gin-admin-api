@@ -6,3 +6,10 @@ type PageResult struct {
 	Page     int         `json:"page"`
 	PageSize int         `json:"pageSize"`
 }
+
+// 分页结果
+type PageGridData[T any] struct {
+	Rows    []T
+	Total   int
+	Summary any
+}

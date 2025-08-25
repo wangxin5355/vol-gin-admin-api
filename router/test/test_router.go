@@ -13,6 +13,9 @@ func (s *TestRouter) InitTestRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 	baseRouter := Router.Group("test")
 	{
 		baseRouter.POST("GetPageData", testApi.GetPageData)
+		baseRouter.POST("Add", testApi.Add)
+		baseRouter.POST("Update", testApi.Update)
+		baseRouter.POST("Del", testApi.Del)
 	}
 	return baseRouter
 }

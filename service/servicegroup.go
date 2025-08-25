@@ -7,7 +7,7 @@ import (
 )
 
 type TestServiceGroup struct {
-	test.TestService
+	*test.TestService
 }
 type ExampleServiceGroup struct {
 	example.ExampleTestService
@@ -25,4 +25,11 @@ type ServiceGroup struct {
 	SystemServiceGroup  SystemServiceGroup
 	ExampleServiceGroup ExampleServiceGroup
 	TestServiceGroup    TestServiceGroup
+}
+
+// 新增初始化方法
+func InitServiceGroup() {
+	ServiceGroupApp.TestServiceGroup = TestServiceGroup{
+		TestService: test.NewTestService(),
+	}
 }

@@ -26,7 +26,29 @@ func Result(code int, data interface{}, msg string, c *gin.Context) {
 	})
 }
 
-func Ok(c *gin.Context) {
+// 响应内容
+type WebResponseContent struct {
+	Status  bool
+	Code    string
+	Message string
+	Data    any
+}
+
+func Ok(msg string, data any) *WebResponseContent {
+	if msg == "" {
+		msg = "操作成功"
+	}
+	if data == nil {
+		data = nil // 或 data = map[string]interface{}{}
+	}
+	return &WebResponseContent{Status: true, Message: msg, Data: data}
+}
+
+func Error(msg string) *WebResponseContent {
+	return &WebResponseContent{Status: false, Message: msg}
+}
+
+func OkWithContext(c *gin.Context) {
 	Result(SUCCESS, map[string]interface{}{}, "操作成功", c)
 }
 
