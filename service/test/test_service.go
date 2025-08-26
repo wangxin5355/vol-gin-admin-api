@@ -1,13 +1,13 @@
 package test
 
 import (
-	"fmt"
-
+	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/core/base"
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system/partial"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 //
@@ -59,10 +59,10 @@ type TestService struct {
 // 构造函数
 // 示例：在 TestService 构造函数中设置 QueryRelativeExpression，实现自动扩展查询
 func NewTestService() *TestService {
-	ts := &TestService{
+	service := &TestService{
 		BaseService: base.NewBaseService[partial.TestTemplateEntity](string(initialize.DbGin)),
 	}
-	return ts
+	return service
 }
 
 // 重写分页方法
@@ -98,14 +98,20 @@ func (s *TestService) GetPageData(options request.PageDataOptions) *response.Pag
 	// 查询后处理数据
 	s.BaseService.GetPageDataOnExecuted = func(list *[]partial.TestTemplateEntity) {
 		//循环处理数据
-		for i := range *list {
-			(*list)[i].Test = fmt.Sprintf("测试数据 %d", i)
-		}
+		//for i := range *list {
+		//	(*list)[i].Test = fmt.Sprintf("测试数据 %d", i)
+		//}
 	}
 	return s.BaseService.GetPageData(options)
 }
 
 // 可以选择重写方法
-func (s *TestService) Add(saveModel request.SaveModel) *response.WebResponseContent {
-	return s.BaseService.Add(saveModel)
+func (s *TestService) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+	return s.BaseService.Add(c, saveModel)
+}
+
+// 获取当前用户信息
+func (s *TestService) GetCurrentUserInfo(c *gin.Context) *response.WebResponseContent {
+	data := utils.GetUserInfo(c)
+	return response.Ok("", data)
 }

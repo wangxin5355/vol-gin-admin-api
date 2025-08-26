@@ -6,9 +6,11 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
+	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"gorm.io/gorm"
 )
@@ -41,8 +43,8 @@ func (s *BaseService[T]) GetPageData(options request.PageDataOptions) *response.
 }
 
 // add 添加
-func (s *BaseService[T]) Add(saveModel request.SaveModel) *response.WebResponseContent {
-	return add[T](s.DB, saveModel)
+func (s *BaseService[T]) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+	return add[T](c, s.DB, saveModel)
 }
 
 // update 更新
@@ -166,10 +168,11 @@ func getPageData[T any](db *gorm.DB,
 }
 
 // add 添加数据
-func add[T any](db *gorm.DB, options request.SaveModel) *response.WebResponseContent {
+func add[T any](c *gin.Context, db *gorm.DB, options request.SaveModel) *response.WebResponseContent {
 	var entity T
-	// 反射赋值
 	entity = utils.DicToEntity[T](options.MainData)
+	var userInfo = GetUserInfo(c)
+	utils.SetDefaultValue[T](&entity, true, userInfo.UserID, userInfo.Username)
 	if err := db.Create(&entity).Error; err != nil {
 		return response.Error("添加失败: " + err.Error())
 	}
@@ -268,4 +271,14 @@ func del[T any](db *gorm.DB, keys []any) *response.WebResponseContent {
 	}
 
 	return response.Ok("删除成功", nil)
+}
+
+// 获取用户信息
+func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
+	data := utils.GetUserInfo(c)
+	if data == nil {
+		global.GVA_LOG.Error("从Gin的Context中获取从jwt解析信息失败, 请检查请求头是否存在x-token")
+		return nil
+	}
+	return data
 }

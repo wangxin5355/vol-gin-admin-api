@@ -16,6 +16,7 @@ func (s *TestRouter) InitTestRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
 		baseRouter.POST("Add", testApi.Add)
 		baseRouter.POST("Update", testApi.Update)
 		baseRouter.POST("Del", testApi.Del)
+		baseRouter.GET("GetCurrentUserInfo", testApi.GetCurrentUserInfo)
 	}
 	return baseRouter
 }

@@ -42,7 +42,7 @@ func (b *TestApi) Add(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := getServiceGroup().Add(param)
+	data := getServiceGroup().Add(c, param)
 	response.OkWithData(data, c)
 }
 
@@ -77,5 +77,16 @@ func (b *TestApi) Del(c *gin.Context) {
 		return
 	}
 	data := getServiceGroup().Del(keys)
+	response.OkWithData(data, c)
+}
+
+// GetCurrentUserInfo
+// @Tags     TestApi
+// @Summary  获取当前用户信息
+// @Produce  application/json
+// @Success 200 {object} response.Response{data=string} "获取当前用户
+// @Router   /test/GetCurrentUserInfo [get]
+func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
+	data := getServiceGroup().GetCurrentUserInfo(c)
 	response.OkWithData(data, c)
 }
