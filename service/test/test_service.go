@@ -1,11 +1,13 @@
 package test
 
 import (
+	"fmt"
+
 	"github.com/wangxin5355/vol-gin-admin-api/core/base"
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
-	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	"github.com/wangxin5355/vol-gin-admin-api/model/system/partial"
 )
 
 //
@@ -51,18 +53,55 @@ import (
 
 // TestService 继承 BaseService[SysUser]
 type TestService struct {
-	*base.BaseService[system.SysUser]
+	*base.BaseService[partial.TestTemplateEntity]
 }
 
 // 构造函数
+// 示例：在 TestService 构造函数中设置 QueryRelativeExpression，实现自动扩展查询
 func NewTestService() *TestService {
-	return &TestService{
-		BaseService: base.NewBaseService[system.SysUser](string(initialize.DbGin)),
+	ts := &TestService{
+		BaseService: base.NewBaseService[partial.TestTemplateEntity](string(initialize.DbGin)),
 	}
+	return ts
 }
 
 // 重写分页方法
-func (s *TestService) GetPageData(options request.PageDataOptions) *response.PageGridData[system.SysUser] {
+func (s *TestService) GetPageData(options request.PageDataOptions) *response.PageGridData[partial.TestTemplateEntity] {
+	//// 查询前设置查询条件
+	//s.BaseService.QueryRelativeExpression = func(db *gorm.DB) *gorm.DB {
+	//	return db.Where("Enable = ?", 1)
+	//}
+	//// 统计
+	//s.BaseService.SummaryExpress = func(db *gorm.DB) any {
+	//	res := map[string]any{}
+	//	// 方式一(推荐这种 一次查询完成)
+	//	db.Select(
+	//		`COUNT(Enable) as Enable,
+	//				SUM(CASE WHEN Gender = 0 THEN 1 ELSE 0 END) as Gender
+	//		`).
+	//		Scan(&res)
+	//
+	//	// 方式二
+	//	var enableCount int64
+	//	db.Where("enable = ?", 1).
+	//		Count(&enableCount)
+	//	res["Enable"] = enableCount
+	//
+	//	// 统计 Gender=0 的总数
+	//	var genderCount int64
+	//	db.Where("gender = ?", 0).
+	//		Count(&genderCount)
+	//	res["Gender"] = genderCount
+	//	return res
+	//}
+
+	// 查询后处理数据
+	s.BaseService.GetPageDataOnExecuted = func(list *[]partial.TestTemplateEntity) {
+		//循环处理数据
+		for i := range *list {
+			(*list)[i].Test = fmt.Sprintf("测试数据 %d", i)
+		}
+	}
 	return s.BaseService.GetPageData(options)
 }
 

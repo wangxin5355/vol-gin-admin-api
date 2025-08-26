@@ -16,6 +16,12 @@ import (
 // BaseService 泛型基类
 type BaseService[T any] struct {
 	DB *gorm.DB
+	// 查询前条件扩展
+	QueryRelativeExpression func(*gorm.DB) *gorm.DB
+	// 查询统计扩展
+	SummaryExpress func(*gorm.DB) any
+	// 查询后(从数据库查询的结果)
+	GetPageDataOnExecuted func(*[]T)
 }
 
 // 构造函数
@@ -31,7 +37,7 @@ func NewBaseService[T any](dbName string) *BaseService[T] {
 
 // getPageData 分页查询
 func (s *BaseService[T]) GetPageData(options request.PageDataOptions) *response.PageGridData[T] {
-	return getPageData[T](s.DB, options)
+	return getPageData[T](s.DB, options, s.QueryRelativeExpression, s.SummaryExpress, s.GetPageDataOnExecuted)
 }
 
 // add 添加
@@ -121,23 +127,42 @@ func ApplyJsonToDB(db *gorm.DB, options request.PageDataOptions) *gorm.DB {
 }
 
 // getPageData 传入一个实体，将其转换为 GORM 的映射对象
-func getPageData[T any](db *gorm.DB, options request.PageDataOptions) *response.PageGridData[T] {
+func getPageData[T any](db *gorm.DB,
+	options request.PageDataOptions,
+	queryRelativeExpression func(*gorm.DB) *gorm.DB,
+	SummaryExpress func(*gorm.DB) any,
+	GetPageDataOnExecuted func(*[]T)) *response.PageGridData[T] {
 	var list []T
 	var total int64
 	// 获取 GORM DB 实例
 	db = db.Model(new(T))
+	// 定义返回类
+	var res = &response.PageGridData[T]{Rows: nil, Total: 0}
 	// 查询条件、排序、分页
 	db = ApplyJsonToDB(db, options)
-
+	// 查询前条件扩展
+	if queryRelativeExpression != nil {
+		db = queryRelativeExpression(db)
+	}
 	// 先执行查询总数，如果是空的就不需要继续执行了
 	if err := db.Count(&total).Error; err != nil {
-		return &response.PageGridData[T]{Rows: nil, Total: 0}
+		return res
 	}
 	// 执行查询
 	if err := db.Find(&list).Error; err != nil {
-		return &response.PageGridData[T]{Rows: nil, Total: 0}
+		return res
 	}
-	return &response.PageGridData[T]{Rows: list, Total: int(total)}
+	// 统计扩展
+	if SummaryExpress != nil {
+		res.Summary = SummaryExpress(db)
+	}
+	// 查询后事件(从数据库查询的结果)
+	if GetPageDataOnExecuted != nil {
+		GetPageDataOnExecuted(&list)
+	}
+	res.Rows = list
+	res.Total = int(total)
+	return res
 }
 
 // add 添加数据
