@@ -43,7 +43,11 @@ func (b *TestApi) Add(c *gin.Context) {
 		return
 	}
 	data := getServiceGroup().Add(c, param)
-	response.OkWithData(data, c)
+	if data.Status {
+		response.OkWithData(data, c)
+	} else {
+		response.FailWithMessage(data.Message, c)
+	}
 }
 
 // Update

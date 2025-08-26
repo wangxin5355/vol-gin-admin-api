@@ -24,6 +24,11 @@ type BaseService[T any] struct {
 	SummaryExpress func(*gorm.DB) any
 	// 查询后(从数据库查询的结果)
 	GetPageDataOnExecuted func(*[]T)
+
+	//AddOnExecuting 保存到数据库前事件
+	AddOnExecuting func(*T) *response.WebResponseContent
+	//AddOnExecuted 保存到数据库后事件
+	AddOnExecuted func(*T) *response.WebResponseContent
 }
 
 // 构造函数
@@ -44,7 +49,7 @@ func (s *BaseService[T]) GetPageData(options request.PageDataOptions) *response.
 
 // add 添加
 func (s *BaseService[T]) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
-	return add[T](c, s.DB, saveModel)
+	return add[T](c, s.DB, saveModel, s.AddOnExecuting, s.AddOnExecuted)
 }
 
 // update 更新
@@ -168,12 +173,40 @@ func getPageData[T any](db *gorm.DB,
 }
 
 // add 添加数据
-func add[T any](c *gin.Context, db *gorm.DB, options request.SaveModel) *response.WebResponseContent {
+func add[T any](c *gin.Context,
+	db *gorm.DB,
+	options request.SaveModel,
+	AddOnExecuting, AddOnExecuted func(*T) *response.WebResponseContent) *response.WebResponseContent {
+
 	var entity T
 	entity = utils.DicToEntity[T](options.MainData)
 	var userInfo = GetUserInfo(c)
 	utils.SetDefaultValue[T](&entity, true, userInfo.UserID, userInfo.Username)
-	if err := db.Create(&entity).Error; err != nil {
+	// 保存前事件
+	if AddOnExecuting != nil {
+		beforeResp := AddOnExecuting(&entity)
+		if beforeResp.Status == false {
+			return beforeResp
+		}
+	}
+	// 保存后事件结果
+	var afterResp *response.WebResponseContent
+	// 开启事务
+	err := db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&entity).Error; err != nil {
+			return err
+		}
+		//保存后事件
+		if AddOnExecuted != nil {
+			afterResp = AddOnExecuted(&entity)
+			if afterResp.Status == false {
+				return fmt.Errorf(afterResp.Message)
+			}
+		}
+		//提交事务
+		return nil
+	})
+	if err != nil {
 		return response.Error("添加失败: " + err.Error())
 	}
 	return response.Ok("添加成功", entity)
@@ -277,7 +310,7 @@ func del[T any](db *gorm.DB, keys []any) *response.WebResponseContent {
 func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
 	data := utils.GetUserInfo(c)
 	if data == nil {
-		global.GVA_LOG.Error("从Gin的Context中获取从jwt解析信息失败, 请检查请求头是否存在x-token")
+		global.GVA_LOG.Error("从Gin的Context中获取从jwt解析信息失败, 请检查请求头是否存在token")
 		return nil
 	}
 	return data

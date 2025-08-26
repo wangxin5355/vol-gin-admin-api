@@ -107,6 +107,17 @@ func (s *TestService) GetPageData(options request.PageDataOptions) *response.Pag
 
 // 可以选择重写方法
 func (s *TestService) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+	// 保存前操作
+	s.AddOnExecuting = func(entity *partial.TestTemplateEntity) *response.WebResponseContent {
+		// 获取当前用户信息
+		entity.Name = "保存前操作"
+		//return response.Ok("", entity)
+		return response.Error("保存前操作错误")
+	}
+	s.AddOnExecuted = func(entity *partial.TestTemplateEntity) *response.WebResponseContent {
+		//return response.Ok("保存后操作", entity)
+		return response.Error("保存后操作错误")
+	}
 	return s.BaseService.Add(c, saveModel)
 }
 
