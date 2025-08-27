@@ -3,7 +3,6 @@ package base
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,7 @@ import (
 )
 
 // BaseService 泛型基类
-type BaseService[T any] struct {
+type BaseService[T, T2 any] struct {
 	DB *gorm.DB
 	// 查询前条件扩展
 	QueryRelativeExpression func(*gorm.DB) *gorm.DB
@@ -26,40 +25,45 @@ type BaseService[T any] struct {
 	GetPageDataOnExecuted func(*[]T)
 
 	//AddOnExecuting 保存到数据库前事件
-	AddOnExecuting func(*T) *response.WebResponseContent
+	AddOnExecuting func(*T2) *response.WebResponseContent
 	//AddOnExecuted 保存到数据库后事件
-	AddOnExecuted func(*T) *response.WebResponseContent
+	AddOnExecuted func(*T2) *response.WebResponseContent
+
+	//编辑方法保存数据库前处理
+	UpdateOnExecuting func(*T2) *response.WebResponseContent
+	//编辑方法保存数据库后处理
+	UpdateOnExecuted func(*T2) *response.WebResponseContent
 }
 
 // 构造函数
-func NewBaseService[T any](dbName string) *BaseService[T] {
+func NewBaseService[T, T2 any](dbName string) *BaseService[T, T2] {
 	db := global.GetGlobalDBByDBName(dbName)
 	if db == nil {
 		panic("数据库连接未初始化或名称错误: " + dbName)
 	}
-	return &BaseService[T]{
+	return &BaseService[T, T2]{
 		DB: db,
 	}
 }
 
 // getPageData 分页查询
-func (s *BaseService[T]) GetPageData(options request.PageDataOptions) *response.PageGridData[T] {
-	return getPageData[T](s.DB, options, s.QueryRelativeExpression, s.SummaryExpress, s.GetPageDataOnExecuted)
+func (s *BaseService[T, T2]) GetPageData(options request.PageDataOptions) *response.PageGridData[T] {
+	return getPageData[T, T2](s.DB, options, s.QueryRelativeExpression, s.SummaryExpress, s.GetPageDataOnExecuted)
 }
 
 // add 添加
-func (s *BaseService[T]) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
-	return add[T](c, s.DB, saveModel, s.AddOnExecuting, s.AddOnExecuted)
+func (s *BaseService[T, T2]) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+	return add[T, T2](c, s.DB, saveModel, s.AddOnExecuting, s.AddOnExecuted)
 }
 
 // update 更新
-func (s *BaseService[T]) Update(saveModel request.SaveModel) *response.WebResponseContent {
-	return update[T](s.DB, saveModel)
+func (s *BaseService[T, T2]) Update(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+	return update[T, T2](c, s.DB, saveModel, s.UpdateOnExecuting, s.UpdateOnExecuted)
 }
 
 // del 删除
-func (s *BaseService[T]) Del(keys []any) *response.WebResponseContent {
-	return del[T](s.DB, keys)
+func (s *BaseService[T, T2]) Del(keys []any) *response.WebResponseContent {
+	return del[T, T2](s.DB, keys)
 }
 
 //--------------------------------------------------------------
@@ -134,9 +138,9 @@ func ApplyJsonToDB(db *gorm.DB, options request.PageDataOptions) *gorm.DB {
 }
 
 // getPageData 传入一个实体，将其转换为 GORM 的映射对象
-func getPageData[T any](db *gorm.DB,
+func getPageData[T, T2 any](db *gorm.DB,
 	options request.PageDataOptions,
-	queryRelativeExpression func(*gorm.DB) *gorm.DB,
+	QueryRelativeExpression func(*gorm.DB) *gorm.DB,
 	SummaryExpress func(*gorm.DB) any,
 	GetPageDataOnExecuted func(*[]T)) *response.PageGridData[T] {
 	var list []T
@@ -148,8 +152,8 @@ func getPageData[T any](db *gorm.DB,
 	// 查询条件、排序、分页
 	db = ApplyJsonToDB(db, options)
 	// 查询前条件扩展
-	if queryRelativeExpression != nil {
-		db = queryRelativeExpression(db)
+	if QueryRelativeExpression != nil {
+		db = QueryRelativeExpression(db)
 	}
 	// 先执行查询总数，如果是空的就不需要继续执行了
 	if err := db.Count(&total).Error; err != nil {
@@ -173,15 +177,18 @@ func getPageData[T any](db *gorm.DB,
 }
 
 // add 添加数据
-func add[T any](c *gin.Context,
+func add[T, T2 any](c *gin.Context,
 	db *gorm.DB,
 	options request.SaveModel,
-	AddOnExecuting, AddOnExecuted func(*T) *response.WebResponseContent) *response.WebResponseContent {
+	AddOnExecuting, AddOnExecuted func(*T2) *response.WebResponseContent) *response.WebResponseContent {
 
-	var entity T
-	entity = utils.DicToEntity[T](options.MainData)
+	var entity T2
+	entity = utils.DicToEntity[T2](options.MainData)
 	var userInfo = GetUserInfo(c)
-	utils.SetDefaultValue[T](&entity, true, userInfo.UserID, userInfo.Username)
+	if userInfo == nil {
+		return response.Error("用户信息获取失败")
+	}
+	utils.SetDefaultValue[T2](&entity, true, userInfo.UserID, userInfo.Username)
 	// 保存前事件
 	if AddOnExecuting != nil {
 		beforeResp := AddOnExecuting(&entity)
@@ -213,15 +220,22 @@ func add[T any](c *gin.Context,
 }
 
 // update 更新数据，只更新实体中存在的字段且排除主键
-func update[T any](db *gorm.DB, options request.SaveModel) *response.WebResponseContent {
-	var entity T
-	entity = utils.DicToEntity[T](options.MainData)
+func update[T, T2 any](c *gin.Context,
+	db *gorm.DB,
+	options request.SaveModel,
+	UpdateOnExecuting,
+	UpdateOnExecuted func(*T2) *response.WebResponseContent) *response.WebResponseContent {
+	// 用 DicToEntity[T2] 生成业务实体
+	entity := utils.DicToEntity[T2](options.MainData)
+	var userInfo = GetUserInfo(c)
+	utils.SetDefaultValue[T2](&entity, false, userInfo.UserID, userInfo.Username)
 
 	// 解析结构体
 	stmt := &gorm.Statement{DB: db}
 	if err := stmt.Parse(&entity); err != nil {
 		return response.Error("更新失败: " + err.Error())
 	}
+	stmt.Dest = options.MainData
 
 	// 获取主键字段及值
 	primaryField := stmt.Schema.PrioritizedPrimaryField
@@ -233,54 +247,49 @@ func update[T any](db *gorm.DB, options request.SaveModel) *response.WebResponse
 		return response.Error("更新失败: 参数缺少主键字段或主键值为空")
 	}
 
-	// 构造更新 map：只包含实体字段且非主键
-	t := reflect.TypeOf(entity)
-	updateFields := make(map[string]any)
-	for k, v := range options.MainData {
-		found := false
-		for i := 0; i < t.NumField(); i++ {
-			field := t.Field(i)
-			// 字段名匹配
-			if field.Name == k {
-				found = true
-				break
-			}
-		}
-		if !found {
-			continue // 跳过不在实体中的字段
-		}
-
-		// 跳过主键字段
-		skip := false
-		for _, pf := range stmt.Schema.PrimaryFields {
-			if k == pf.Name || k == pf.DBName ||
-				strings.EqualFold(k, pf.Name) || strings.EqualFold(k, pf.DBName) {
-				skip = true
-				break
-			}
-		}
-		if !skip {
-			updateFields[k] = v
+	if UpdateOnExecuting != nil {
+		beforeResp := UpdateOnExecuting(&entity)
+		if beforeResp.Status == false {
+			return beforeResp
 		}
 	}
+
+	// 构造更新 map：只包含有值的导出字段
+	updateFields := utils.BuildEntityFields(entity, stmt)
 
 	// 没有字段可更新
 	if len(updateFields) == 0 {
 		return response.Error("更新失败: 没有可更新的字段")
 	}
 
-	// 更新数据库
-	if err := db.Model(new(T)).
-		Where(primaryField.DBName+" = ?", pkVal).
-		Updates(updateFields).Error; err != nil {
+	//保存后事件结果
+	var afterResp *response.WebResponseContent
+	// 开启事务
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// 执行更新
+		if err := tx.Model(new(T)).
+			Where(primaryField.DBName+" = ?", pkVal).
+			Updates(updateFields).Error; err != nil {
+			return err
+		}
+		//保存后事件
+		if UpdateOnExecuted != nil {
+			afterResp = UpdateOnExecuted(&entity)
+			if afterResp.Status == false {
+				return fmt.Errorf(afterResp.Message)
+			}
+		}
+		//提交事务
+		return nil
+	})
+	if err != nil {
 		return response.Error("更新失败: " + err.Error())
 	}
-
 	return response.Ok("更新成功", entity)
 }
 
 // del 删除数据
-func del[T any](db *gorm.DB, keys []any) *response.WebResponseContent {
+func del[T, T2 any](db *gorm.DB, keys []any) *response.WebResponseContent {
 	if len(keys) == 0 {
 		return response.Error("删除失败: 参数 keys 不能为空")
 	}

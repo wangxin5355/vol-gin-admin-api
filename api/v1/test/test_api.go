@@ -62,7 +62,7 @@ func (b *TestApi) Update(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := getServiceGroup().Update(param)
+	data := getServiceGroup().Update(c, param)
 	response.OkWithData(data, c)
 }
 

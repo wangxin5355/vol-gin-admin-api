@@ -6,6 +6,7 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
+	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system/partial"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
@@ -53,14 +54,14 @@ import (
 
 // TestService 继承 BaseService[SysUser]
 type TestService struct {
-	*base.BaseService[partial.TestTemplateEntity]
+	*base.BaseService[partial.TestTemplateEntity, system.TestTemplate]
 }
 
 // 构造函数
 // 示例：在 TestService 构造函数中设置 QueryRelativeExpression，实现自动扩展查询
 func NewTestService() *TestService {
 	service := &TestService{
-		BaseService: base.NewBaseService[partial.TestTemplateEntity](string(initialize.DbGin)),
+		BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
 	}
 	return service
 }
@@ -108,17 +109,33 @@ func (s *TestService) GetPageData(options request.PageDataOptions) *response.Pag
 // 可以选择重写方法
 func (s *TestService) Add(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
 	// 保存前操作
-	s.AddOnExecuting = func(entity *partial.TestTemplateEntity) *response.WebResponseContent {
+	s.AddOnExecuting = func(entity *system.TestTemplate) *response.WebResponseContent {
 		// 获取当前用户信息
 		entity.Name = "保存前操作"
 		//return response.Ok("", entity)
 		return response.Error("保存前操作错误")
 	}
-	s.AddOnExecuted = func(entity *partial.TestTemplateEntity) *response.WebResponseContent {
+	s.AddOnExecuted = func(entity *system.TestTemplate) *response.WebResponseContent {
 		//return response.Ok("保存后操作", entity)
 		return response.Error("保存后操作错误")
 	}
 	return s.BaseService.Add(c, saveModel)
+}
+
+// 重写Update
+func (s *TestService) Update(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
+
+	// 更新前操作
+	s.UpdateOnExecuting = func(entity *system.TestTemplate) *response.WebResponseContent {
+		entity.Name = "更新前操作"
+		return response.Ok("", entity)
+		//return response.Error("更新前操作错误")
+	}
+	//s.UpdateOnExecuted = func(entity *system.TestTemplate) *response.WebResponseContent {
+	//	return response.Ok("更新后操作", entity)
+	//	//return response.Error("更新后操作错误")
+	//}
+	return s.BaseService.Update(c, saveModel)
 }
 
 // 获取当前用户信息

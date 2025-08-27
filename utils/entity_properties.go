@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 // DicToEntity 反射赋值
@@ -284,4 +286,114 @@ func setDefaultValueByReflect(v reflect.Value, isAdd bool, userID uint32, userNa
 			}
 		}
 	}
+}
+
+// 判断字段是否存在（支持嵌套结构体）
+func hasFieldRecursive(t reflect.Type, name string) bool {
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+
+		// 直接匹配字段名
+		if strings.EqualFold(field.Name, name) {
+			return true
+		}
+
+		// 如果是嵌套结构体，递归进去
+		if field.Type.Kind() == reflect.Struct {
+			if hasFieldRecursive(field.Type, name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// 判断值是否为空
+func IsEmptyValue(v any) bool {
+	if v == nil {
+		return true
+	}
+	// 处理 time.Time 类型
+	if t, ok := v.(time.Time); ok {
+		return t.IsZero()
+	}
+
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.String, reflect.Slice, reflect.Map, reflect.Array:
+		return rv.Len() == 0
+	case reflect.Bool:
+		return !rv.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return rv.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return rv.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return rv.Float() == 0
+	case reflect.Interface, reflect.Ptr:
+		return rv.IsNil()
+	case reflect.Struct:
+		//时间类型
+		if rv.Type() == reflect.TypeOf(time.Time{}) {
+			return rv.Interface().(time.Time).IsZero()
+		}
+	}
+	return false
+}
+
+// BuildEntityFields 构造 updateFields，只取匿名结构体的字段
+func BuildEntityFields(entity any, stmt *gorm.Statement) map[string]any {
+	updateFields := make(map[string]any)
+
+	v := reflect.ValueOf(entity)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	t := v.Type()
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		fieldName := field.Name
+		// 跳过主键字段
+		skip := false
+		for _, pf := range stmt.Schema.PrimaryFields {
+			if strings.EqualFold(fieldName, pf.Name) || strings.EqualFold(fieldName, pf.DBName) {
+				skip = true
+				break
+			}
+		}
+		if skip {
+			continue
+		}
+		// 递归处理匿名结构体
+		if field.Anonymous && field.Type.Kind() == reflect.Struct {
+			anonVal := v.Field(i)
+			anonType := field.Type
+			for j := 0; j < anonType.NumField(); j++ {
+				anonField := anonType.Field(j)
+				anonFieldName := anonField.Name
+				skipAnon := false
+				for _, pf := range stmt.Schema.PrimaryFields {
+					if strings.EqualFold(anonFieldName, pf.Name) || strings.EqualFold(anonFieldName, pf.DBName) {
+						skipAnon = true
+						break
+					}
+				}
+				if skipAnon {
+					continue
+				}
+				anonFieldVal := anonVal.Field(j).Interface()
+				if !IsEmptyValue(anonFieldVal) {
+					updateFields[anonFieldName] = anonFieldVal
+				}
+			}
+			continue
+		}
+		// 普通字段，只加入非零/非空值
+		fieldVal := v.Field(i).Interface()
+		if !IsEmptyValue(fieldVal) {
+			updateFields[fieldName] = fieldVal
+		}
+	}
+	return updateFields
 }
