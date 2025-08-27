@@ -43,11 +43,7 @@ func (b *TestApi) Add(c *gin.Context) {
 		return
 	}
 	data := getServiceGroup().Add(c, param)
-	if data.Status {
-		response.OkWithData(data, c)
-	} else {
-		response.FailWithMessage(data.Message, c)
-	}
+	response.WebResponse(data, c)
 }
 
 // Update
@@ -63,7 +59,7 @@ func (b *TestApi) Update(c *gin.Context) {
 		return
 	}
 	data := getServiceGroup().Update(c, param)
-	response.OkWithData(data, c)
+	response.WebResponse(data, c)
 }
 
 // Del
@@ -80,8 +76,8 @@ func (b *TestApi) Del(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	data := getServiceGroup().Del(keys)
-	response.OkWithData(data, c)
+	data := getServiceGroup().Del(c, keys)
+	response.WebResponse(data, c)
 }
 
 // GetCurrentUserInfo
@@ -92,5 +88,5 @@ func (b *TestApi) Del(c *gin.Context) {
 // @Router   /test/GetCurrentUserInfo [get]
 func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
 	data := getServiceGroup().GetCurrentUserInfo(c)
-	response.OkWithData(data, c)
+	response.WebResponse(data, c)
 }

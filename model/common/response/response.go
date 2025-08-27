@@ -48,6 +48,11 @@ func Error(msg string) *WebResponseContent {
 	return &WebResponseContent{Status: false, Message: msg}
 }
 
+// WebResponse 返回WebResponseContent内容
+func WebResponse(resp *WebResponseContent, c *gin.Context) {
+	c.JSON(http.StatusOK, resp)
+}
+
 func OkWithContext(c *gin.Context) {
 	Result(SUCCESS, map[string]interface{}{}, "操作成功", c)
 }

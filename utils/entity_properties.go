@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -396,4 +397,29 @@ func BuildEntityFields(entity any, stmt *gorm.Statement) map[string]any {
 		}
 	}
 	return updateFields
+}
+
+// JsonToEntity json转换为实体
+func JsonToEntity[T any](jsonStr string) T {
+	var entity T
+	json.Unmarshal([]byte(jsonStr), &entity)
+	return entity
+}
+
+// map[string]any 转换为实体
+func MapToEntity[T any](data map[string]any) T {
+	var entity T
+	bytes, _ := json.Marshal(data)
+	json.Unmarshal(bytes, &entity)
+	return entity
+}
+
+// Contains 判断字符串数组是否包含某个字符串
+func Contains(arr []any, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }

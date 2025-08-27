@@ -33,6 +33,11 @@ type BaseService[T, T2 any] struct {
 	UpdateOnExecuting func(*T2) *response.WebResponseContent
 	//编辑方法保存数据库后处理
 	UpdateOnExecuted func(*T2) *response.WebResponseContent
+
+	//DelOnExecuting 删除前事件
+	DelOnExecuting func([]any) *response.WebResponseContent
+	//DelOnExecuted 删除后事件
+	DelOnExecuted func([]any) *response.WebResponseContent
 }
 
 // 构造函数
@@ -62,8 +67,8 @@ func (s *BaseService[T, T2]) Update(c *gin.Context, saveModel request.SaveModel)
 }
 
 // del 删除
-func (s *BaseService[T, T2]) Del(keys []any) *response.WebResponseContent {
-	return del[T, T2](s.DB, keys)
+func (s *BaseService[T, T2]) Del(c *gin.Context, keys []any) *response.WebResponseContent {
+	return del[T, T2](c, s.DB, keys, s.DelOnExecuting, s.DelOnExecuted)
 }
 
 //--------------------------------------------------------------
@@ -182,8 +187,8 @@ func add[T, T2 any](c *gin.Context,
 	options request.SaveModel,
 	AddOnExecuting, AddOnExecuted func(*T2) *response.WebResponseContent) *response.WebResponseContent {
 
-	var entity T2
-	entity = utils.DicToEntity[T2](options.MainData)
+	//entity = utils.DicToEntity[T2](options.MainData)
+	entity := utils.MapToEntity[T2](options.MainData)
 	var userInfo = GetUserInfo(c)
 	if userInfo == nil {
 		return response.Error("用户信息获取失败")
@@ -226,7 +231,8 @@ func update[T, T2 any](c *gin.Context,
 	UpdateOnExecuting,
 	UpdateOnExecuted func(*T2) *response.WebResponseContent) *response.WebResponseContent {
 	// 用 DicToEntity[T2] 生成业务实体
-	entity := utils.DicToEntity[T2](options.MainData)
+	//entity := utils.DicToEntity[T2](options.MainData)
+	entity := utils.MapToEntity[T2](options.MainData)
 	var userInfo = GetUserInfo(c)
 	utils.SetDefaultValue[T2](&entity, false, userInfo.UserID, userInfo.Username)
 
@@ -289,12 +295,15 @@ func update[T, T2 any](c *gin.Context,
 }
 
 // del 删除数据
-func del[T, T2 any](db *gorm.DB, keys []any) *response.WebResponseContent {
+func del[T, T2 any](c *gin.Context,
+	db *gorm.DB,
+	keys []any,
+	DelOnExecuting, DelOnExecuted func([]any) *response.WebResponseContent) *response.WebResponseContent {
 	if len(keys) == 0 {
 		return response.Error("删除失败: 参数 keys 不能为空")
 	}
 
-	var entity T
+	var entity T2
 	// 解析结构体
 	stmt := &gorm.Statement{DB: db}
 	if err := stmt.Parse(&entity); err != nil {
@@ -306,16 +315,38 @@ func del[T, T2 any](db *gorm.DB, keys []any) *response.WebResponseContent {
 	if primaryField == nil {
 		return response.Error("删除失败: 未找到主键定义")
 	}
-
-	// 执行删除
-	if err := db.Where(primaryField.DBName+" IN ?", keys).Delete(new(T)).Error; err != nil {
+	// 删除前事件
+	if DelOnExecuting != nil {
+		beforeResp := DelOnExecuting(keys)
+		if beforeResp.Status == false {
+			return beforeResp
+		}
+	}
+	// 删除后事件结果
+	var afterResp *response.WebResponseContent
+	//开启事务
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// 执行删除
+		if err := tx.Where(primaryField.DBName+" IN ?", keys).Delete(new(T2)).Error; err != nil {
+			return err
+		}
+		//删除后事件
+		if DelOnExecuted != nil {
+			afterResp = DelOnExecuted(keys)
+			if afterResp.Status == false {
+				return fmt.Errorf(afterResp.Message)
+			}
+		}
+		//提交事务
+		return nil
+	})
+	if err != nil {
 		return response.Error("删除失败: " + err.Error())
 	}
-
 	return response.Ok("删除成功", nil)
 }
 
-// 获取用户信息
+// GetUserInfo 获取用户信息
 func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
 	data := utils.GetUserInfo(c)
 	if data == nil {
@@ -323,4 +354,37 @@ func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
 		return nil
 	}
 	return data
+}
+
+// BindJsonToPageDataOptions 绑定分页参数
+func BindJsonToPageDataOptions(c *gin.Context) (request.PageDataOptions, error) {
+	var param request.PageDataOptions
+	err := c.ShouldBindJSON(&param)
+	if err != nil {
+		response.WebResponse(response.Error(err.Error()), c)
+		return param, err
+	}
+	return param, nil
+}
+
+// BindJsonToSaveModel 绑定保存参数
+func BindJsonToSaveModel(c *gin.Context) (request.SaveModel, error) {
+	var param request.SaveModel
+	err := c.ShouldBindJSON(&param)
+	if err != nil {
+		response.WebResponse(response.Error(err.Error()), c)
+		return param, err
+	}
+	return param, nil
+}
+
+// ShouldBindJSON 绑定JSON参数
+func ShouldBindJSON[T any](c *gin.Context) (T, error) {
+	var param T
+	err := c.ShouldBindJSON(&param)
+	if err != nil {
+		response.WebResponse(response.Error(err.Error()), c)
+		return param, err
+	}
+	return param, nil
 }

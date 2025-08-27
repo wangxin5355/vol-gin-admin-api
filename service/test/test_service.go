@@ -11,47 +11,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
-//
-//type TestService struct {
-//}
-//
-//func Db() *gorm.DB {
-//	return global.GetGlobalDBByDBName(string(initialize.DbGin))
-//}
-//
-//// getPageData 获取分页数据
-//func (s *TestService) getPageData(options request.PageDataOptions) *response.PageGridData[system.SysUser] {
-//	// 调用父类方法：return s.ServiceBase.getPageData(options)
-//	//limit := options.Rows
-//	//offset := (options.Page - 1) * limit
-//	//db := global.GVA_DB.Model(&system.SysUser{})
-//
-//	//var userLise []system.SysUser
-//	//options.Wheres = "[{\"name\":\"Username\",\"value\":\"u\",\"displayType\":\"like\"}]"
-//	//db = provider.ApplyJsonToDB(db, options)
-//	////db.Limit(limit).Offset(offset).Find(&userLise)
-//	//db.Find(&userLise)
-//	//return &provider.PageGridData[system.SysUser]{
-//	//	Rows:  userLise,
-//	//	Total: 100,
-//	return provider.getPageData[system.SysUser](Db(), options)
-//}
-//
-//// add 添加方法
-//func (s *TestService) add(saveModel request.SaveModel) *response.WebResponseContent {
-//	return provider.add[system.SysUser](Db(), saveModel)
-//}
-//
-//// update 更新方法
-//func (s *TestService) update(saveModel request.SaveModel) *response.WebResponseContent {
-//	return provider.update[system.SysUser](Db(), saveModel)
-//}
-//
-//// del 删除方法
-//func (s *TestService) del(keys []any) *response.WebResponseContent {
-//	return provider.del[system.SysUser](Db(), keys)
-//}
-
 // TestService 继承 BaseService[SysUser]
 type TestService struct {
 	*base.BaseService[partial.TestTemplateEntity, system.TestTemplate]
@@ -61,6 +20,7 @@ type TestService struct {
 // 示例：在 TestService 构造函数中设置 QueryRelativeExpression，实现自动扩展查询
 func NewTestService() *TestService {
 	service := &TestService{
+		//这里写了两个实体，为了兼容一些扩展字段，如果只写一个转换会很麻烦
 		BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
 	}
 	return service
@@ -124,7 +84,6 @@ func (s *TestService) Add(c *gin.Context, saveModel request.SaveModel) *response
 
 // 重写Update
 func (s *TestService) Update(c *gin.Context, saveModel request.SaveModel) *response.WebResponseContent {
-
 	// 更新前操作
 	s.UpdateOnExecuting = func(entity *system.TestTemplate) *response.WebResponseContent {
 		entity.Name = "更新前操作"
@@ -136,6 +95,27 @@ func (s *TestService) Update(c *gin.Context, saveModel request.SaveModel) *respo
 	//	//return response.Error("更新后操作错误")
 	//}
 	return s.BaseService.Update(c, saveModel)
+}
+
+// 重写Del
+func (s *TestService) Del(c *gin.Context, keys []any) *response.WebResponseContent {
+	//// 删除前操作
+	//s.DelOnExecuting = func(keys []any) *response.WebResponseContent {
+	//	//循环输出keys
+	//	for _, key := range keys {
+	//		fmt.Println("删除前操作 key:", key)
+	//	}
+	//	return response.Error("删除前操作")
+	//}
+	//// 删除后操作
+	//s.DelOnExecuted = func(keys []any) *response.WebResponseContent {
+	//	//循环输出keys
+	//	for _, key := range keys {
+	//		println("删除后操作 key:", key)
+	//	}
+	//	return response.Error("删除后操作")
+	//}
+	return s.BaseService.Del(c, keys)
 }
 
 // 获取当前用户信息
