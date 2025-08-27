@@ -3,15 +3,15 @@ package test
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
-	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/service/test"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 type TestApi struct {
 }
 
-func getServiceGroup() *service.TestServiceGroup {
-	return &service.ServiceGroupApp.TestServiceGroup
+func getServiceGroup() *test.TestService {
+	return test.TestServiceGroup.TestService
 }
 
 // GetPageData

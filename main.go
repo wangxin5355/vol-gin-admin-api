@@ -40,15 +40,6 @@ func init() {
 	//其他初始化检查
 	initialize.OtherInit()
 
-	// 初始化服务分组，确保数据库已初始化
-	importedServiceInit()
-}
-
-// 新增一个辅助函数用于调用服务初始化，避免 import 循环
-func importedServiceInit() {
-	// 这里直接调用 service 包的初始化方法
-	// 需要确保 service 包已正确导入
-	// 如果 service 包未导入，请在 import 中添加
-	// "github.com/wangxin5355/vol-gin-admin-api/service"
+	// 最后初始化服务，确保数据库已初始化
 	service.InitServiceGroup()
 }

@@ -11,19 +11,21 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
+// TestServiceGroup 用于分组 test 相关服务（只声明，不初始化）
+var TestServiceGroup struct {
+	TestService *TestService
+}
+
+// Test 服务初始化方法
+func InitTestServiceGroup() {
+	TestServiceGroup.TestService = &TestService{
+		BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
+	}
+}
+
 // TestService 继承 BaseService[SysUser]
 type TestService struct {
 	*base.BaseService[partial.TestTemplateEntity, system.TestTemplate]
-}
-
-// 构造函数
-// 示例：在 TestService 构造函数中设置 QueryRelativeExpression，实现自动扩展查询
-func NewTestService() *TestService {
-	service := &TestService{
-		//这里写了两个实体，为了兼容一些扩展字段，如果只写一个转换会很麻烦
-		BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
-	}
-	return service
 }
 
 // 重写分页方法
