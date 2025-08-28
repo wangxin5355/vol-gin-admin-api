@@ -90,3 +90,14 @@ func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
 	data := getServiceGroup().GetCurrentUserInfo(c)
 	response.WebResponse(data, c)
 }
+
+// RedisTest
+// @Tags     TestApi
+// @Summary  测试 Redis
+// @Produce  application/json
+// @Success 200 {object} response.Response{data=string} "测试 Redis
+// @Router   /test/RedisTest [get]
+func (b *TestApi) RedisTest(c *gin.Context) {
+	data := getServiceGroup().RedisTest()
+	response.WebResponse(data, c)
+}

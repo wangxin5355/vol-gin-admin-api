@@ -1,9 +1,12 @@
 package test
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/core/base"
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
+	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
@@ -124,4 +127,19 @@ func (s *TestService) Del(c *gin.Context, keys []any) *response.WebResponseConte
 func (s *TestService) GetCurrentUserInfo(c *gin.Context) *response.WebResponseContent {
 	data := utils.GetUserInfo(c)
 	return response.Ok("", data)
+}
+
+var ctx = context.Background()
+
+// RedisTest 测试 Redis
+func (s *TestService) RedisTest() *response.WebResponseContent {
+	err := global.GVA_REDIS.Set(ctx, "vol", "vol-gin-admin", 0).Err()
+	if err != nil {
+		return response.Error("Redis SET 失败:" + err.Error())
+	}
+	val, err := global.GVA_REDIS.Get(ctx, "vol").Result()
+	if err != nil {
+		return response.Error("Redis GET 失败:" + err.Error())
+	}
+	return response.Ok("Redis GET 成功", val)
 }
