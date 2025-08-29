@@ -21,8 +21,10 @@ type SysTableInfo struct {
 	TableTrueName  string `gorm:"column:TableTrueName" json:"tableTrueName"`
 	UploadField    string `gorm:"column:UploadField" json:"uploadField"`
 	UploadMaxCount int    `gorm:"column:UploadMaxCount" json:"uploadMaxCount"`
+	//关联table_columns
+	TableColumns []SysTableColumn `gorm:"foreignKey:TableId;references:TableId" json:"tableColumns"`
 }
 
 func (SysTableInfo) TableName() string {
-	return "sys_table_info"
+	return "sys_tableinfo"
 }

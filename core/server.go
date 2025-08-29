@@ -83,6 +83,7 @@ func initRouters() *gin.Engine {
 		exampleRouter.InitTestRouter(PublicGroup)
 		testRouter.InitTestRouter(PublicGroup)
 		systemRouter.InitPermissionRouter(PublicGroup)
+		systemRouter.InitSysTableInfoRouter(PublicGroup)
 	}
 
 	global.GVA_ROUTERS = Router.Routes()

@@ -2,31 +2,18 @@ package system
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/wangxin5355/vol-gin-admin-api/api/v1/system"
+	api "github.com/wangxin5355/vol-gin-admin-api/api/v1"
 )
 
-// Api
-type apiGroup struct {
-	system.SysTableInfoApi
-}
+type SysTableInfoRouter struct{}
 
-var apiGroupApp = new(apiGroup)
+var sysTableInfoApi = api.ApiGroupApp.SystemApiGroup.SysTableInfoApi
 
-// Router
-// 只保留一个 routerGroup 结构体，并包含 apiGroup 字段
-// 移除重复和无用结构体
-
-type routerGroup struct {
-	apiGroup *apiGroup
-}
-
-var groupApp = &routerGroup{apiGroup: apiGroupApp}
-
-// 修复 InitSysTableInfoRouter 方法，使用 groupApp.apiGroup
-func (s *routerGroup) InitSysTableInfoRouter(Router gin.RouterGroup) (R gin.IRoutes) {
-	baseRouter := Router.Group("sysTableInfo")
+func (s *SysTableInfoRouter) InitSysTableInfoRouter(Router *gin.RouterGroup) (R gin.IRoutes) {
+	baseRouter := Router.Group("builder")
 	{
-		baseRouter.GET("getTableTree", s.apiGroup.GetTableTree)
+		baseRouter.GET("getTableTree", sysTableInfoApi.GetTableTree)
+		baseRouter.POST("loadTableInfo", sysTableInfoApi.LoadTableInfo)
 	}
 	return baseRouter
 }
