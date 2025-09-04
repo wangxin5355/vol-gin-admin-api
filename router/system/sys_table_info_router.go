@@ -14,6 +14,7 @@ func (s *SysTableInfoRouter) InitSysTableInfoRouter(Router *gin.RouterGroup) (R 
 	{
 		baseRouter.GET("getTableTree", sysTableInfoApi.GetTableTree)
 		baseRouter.POST("loadTableInfo", sysTableInfoApi.LoadTableInfo)
+		baseRouter.POST("createEntityModel", sysTableInfoApi.CreateEntityModel)
 	}
 	return baseRouter
 }

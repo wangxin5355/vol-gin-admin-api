@@ -1,0 +1,31 @@
+package {{.PackageName}}
+
+{{- $importTime := false }}
+{{- $importDecimal := false }}
+{{- $importSQL := false }}
+{{- $importUUID := false }}
+{{- range .Fields }}
+    {{- if eq .Type "time.Time" }}{{ $importTime = true }}{{ end }}
+    {{- if eq .Type "decimal.Decimal" }}{{ $importDecimal = true }}{{ end }}
+    {{- if or (eq .Type "sql.NullString") (eq .Type "sql.NullInt64") (eq .Type "sql.NullBool") }}{{ $importSQL = true }}{{ end }}
+    {{- if eq .Type "uuid.UUID" }}{{ $importUUID = true }}{{ end }}
+{{- end }}
+{{- if or $importTime $importDecimal $importSQL $importUUID }}
+import (
+{{- if $importTime }}	"time"
+{{- end }}
+{{- if $importDecimal }}	"github.com/shopspring/decimal"
+{{- end }}
+{{- if $importSQL }}	"database/sql"
+{{- end }}
+{{- if $importUUID }}	"github.com/google/uuid"
+{{- end }}
+)
+{{- end }}
+
+// {{.CnName}} ({{.TableName}})
+type {{.StructName}} struct {
+{{- range .Fields }}
+	{{ .Name }} {{ .Type }} `json:"{{ .JsonName }}" gorm:"column:{{ .ColumnName }}{{if .Key}};primaryKey{{end}}{{if .ColumnCNName}};comment:{{ .ColumnCNName }}{{end}}"`
+{{- end }}
+}

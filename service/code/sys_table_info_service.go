@@ -2,12 +2,17 @@ package code
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system/request"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlserver"
@@ -127,7 +132,7 @@ func InitTable(
 		DBServer:     dbServer,
 	}
 
-	// 查询字段列表
+	// 查询表字典信息 没有就直接结束掉
 	columns := GetTableColumns(tableName, dbServer)
 	if len(columns) == 0 {
 		return -1
@@ -141,7 +146,7 @@ func InitTable(
 
 	SetMaxLength(columns)
 
-	// 插入表和字段（假设有事务）
+	// 用事务插入主表和子表
 	err = global.GVA_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&tableInfo).Error; err != nil {
 			return err
@@ -179,6 +184,8 @@ func SetMaxLength(columns []*system.SysTableColumn) {
 		}
 	}
 }
+
+// GetTableColumns 获取表字段信息
 func GetTableColumns(tableName, dbServer string) []*system.SysTableColumn {
 	sql := GetCurrentSql(tableName, dbServer)
 	if sql == "" {
@@ -382,7 +389,7 @@ FROM (
 	`, tableName, tableName, tableName)
 }
 
-// 获取连接字符串 根据 gorm.DB 获取 DSN
+// GetConnectionString 获取连接字符串 根据 gorm.DB 获取 DSN
 func GetConnectionString(dbConnection string) string {
 	db := global.GetGlobalDBByDBName(dbConnection)
 	switch dial := db.Dialector.(type) {
@@ -394,5 +401,125 @@ func GetConnectionString(dbConnection string) string {
 		return dial.DSN
 	default:
 		return ""
+	}
+}
+
+type Field struct {
+	Name         string // Go struct 字段名
+	Type         string // Go 字段类型
+	GormTag      string // gorm标签
+	JsonName     string // json标签
+	Nullable     bool   // 是否可为空
+	Editable     bool   // 是否可编辑
+	Display      bool   // 是否显示
+	Key          bool   // 是否主键
+	ColumnCNName string // 中文名
+	ColumnName   string // 原始字段名
+}
+
+type TemplateData struct {
+	PackageName string
+	StructName  string
+	TableName   string
+	CnName      string
+	Fields      []Field
+}
+
+// CreateEntityModel 生成model文件
+func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (TemplateData, error) {
+	tableId := req.TableId
+	// 获取表信息
+	var tableInfo system.SysTableInfo
+	err := global.GVA_DB.
+		Model(&system.SysTableInfo{}).
+		Where("Table_Id = ?", tableId).
+		Preload("TableColumns", func(db *gorm.DB) *gorm.DB {
+			return db.Order("OrderNo ASC")
+		}).
+		First(&tableInfo).Error
+	if err != nil {
+		return TemplateData{}, err
+	}
+
+	fields := make([]Field, 0, len(tableInfo.TableColumns))
+	for _, col := range tableInfo.TableColumns {
+		goFieldName := utils.CamelCase(col.ColumnName)
+		goType := utils.GoTypeWithNull(col.ColumnType, col.IsNull)
+		meta := generateColumnMeta(col)
+		fields = append(fields, Field{
+			Name:         goFieldName,
+			Type:         goType,
+			GormTag:      fmt.Sprintf("column:%s", goFieldName),
+			JsonName:     goFieldName,
+			Nullable:     meta.Nullable,
+			Editable:     meta.Editable,
+			Display:      meta.Display,
+			Key:          col.IsKey == 1,
+			ColumnCNName: col.ColumnCNName,
+			ColumnName:   col.ColumnName,
+		})
+	}
+
+	data := TemplateData{
+		PackageName: "model",
+		StructName:  utils.CamelCase(tableInfo.Table_Name),
+		TableName:   tableInfo.Table_Name,
+		CnName:      tableInfo.CnName,
+		Fields:      fields,
+	}
+
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		return TemplateData{}, err
+	}
+	dirPath := filepath.Join(projectRoot, "model", tableInfo.FolderName)
+	err = os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		return TemplateData{}, err
+	}
+	filePath := filepath.Join(dirPath, "test_template.go")
+	f, err := os.Create(filePath)
+	if err != nil {
+		return TemplateData{}, err
+	}
+	defer func() {
+		cerr := f.Close()
+		if cerr != nil {
+			fmt.Fprintf(os.Stderr, "close file error: %v\n", cerr)
+		}
+	}()
+
+	tmplPath := filepath.Join(projectRoot, "tmpl", "model.tmpl")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		return TemplateData{}, err
+	}
+
+	err = tmpl.Execute(f, data)
+	if err != nil {
+		return TemplateData{}, err
+	}
+
+	// 自动 gofmt 格式化
+	exec.Command("gofmt", "-w", filePath).Run()
+
+	return data, nil
+}
+
+// columnMeta 字段元属性
+type columnMeta struct {
+	Nullable bool
+	Editable bool
+	Display  bool
+	Sortable bool
+}
+
+// generateColumnMeta 根据 SysTableColumn 自动生成字段元属性
+func generateColumnMeta(col system.SysTableColumn) columnMeta {
+	return columnMeta{
+		Nullable: col.IsNull == 1,
+		Editable: col.IsKey == 0 && col.ApiInPut == 1,
+		Display:  col.IsDisplay == 1,
+		Sortable: col.Sortable == 1,
 	}
 }
