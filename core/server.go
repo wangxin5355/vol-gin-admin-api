@@ -22,7 +22,6 @@ type server interface {
 func RunServer() {
 	//TODO 初始化数据库
 	//TODO 初始化redis
-
 	Router := initRouters()
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 	s := initServer(address, Router)
@@ -64,18 +63,14 @@ func initRouters() *gin.Engine {
 	PublicGroup := Router.Group(global.GVA_CONFIG.System.RouterPrefix)  //不需要鉴权
 	PrivateGroup := Router.Group(global.GVA_CONFIG.System.RouterPrefix) //带鉴权
 	PrivateGroup.Use(middleware.JWTAuth())                              //需要鉴权的路由
-	{
-		// 健康监测
-		PublicGroup.GET("/health", func(c *gin.Context) {
-			c.JSON(http.StatusOK, "ok")
-		})
-
-	}
+	// 健康监测
+	PublicGroup.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, "ok")
+	})
 	systemRouter.InitJwtRouter(PrivateGroup)
 	{
 		systemRouter.InitAccRouter(PublicGroup) // 注册Login,register 不需要鉴权的接口
 	}
-
 	{
 		//传入PrivateGroup 则使用了鉴权
 		//exampleRouter.InitTestRouter(PrivateGroup )
@@ -83,6 +78,7 @@ func initRouters() *gin.Engine {
 		exampleRouter.InitTestRouter(PublicGroup)
 		testRouter.InitTestRouter(PublicGroup)
 		systemRouter.InitPermissionRouter(PublicGroup)
+		systemRouter.InitMenuRouter(PrivateGroup) //需要鉴权
 	}
 
 	global.GVA_ROUTERS = Router.Routes()

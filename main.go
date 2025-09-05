@@ -50,5 +50,5 @@ func importedServiceInit() {
 	// 需要确保 service 包已正确导入
 	// 如果 service 包未导入，请在 import 中添加
 	// "github.com/wangxin5355/vol-gin-admin-api/service"
-	service.InitServiceGroup()
+	service.InitServiceInstance()
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -128,4 +129,50 @@ func LoginToken(user system.Login) (token string, claims systemReq.CustomClaims,
 	})
 	token, err = j.CreateToken(claims)
 	return
+}
+
+// 获取菜单类型
+func GetMenuType(c *gin.Context) int {
+	uapp := c.Request.Header.Get("uapp")
+	if len(uapp) == 0 {
+		return 0
+	} else {
+		return 1
+	}
+}
+
+// 获取用户roeids
+func GetUserRoles(c *gin.Context) ([]int, error) {
+	if claims, exists := c.Get("claims"); !exists {
+		if cl, err := GetClaims(c); err != nil {
+			return nil, err
+		} else {
+			//从claims拿roleIDs
+			roleIds := strings.Split(cl.Role_Ids, ",")
+			var roleIds_int = StringSliceToIntSliceFilter(roleIds)
+			return roleIds_int, nil
+		}
+	} else {
+		waitUse := claims.(*systemReq.CustomClaims)
+		roleIds := strings.Split(waitUse.Role_Ids, ",")
+		var roleIds_int = StringSliceToIntSliceFilter(roleIds)
+		return roleIds_int, nil
+	}
+}
+
+// 获取用户roeids
+func GetUserRolesStr(c *gin.Context) ([]string, error) {
+	if claims, exists := c.Get("claims"); !exists {
+		if cl, err := GetClaims(c); err != nil {
+			return nil, err
+		} else {
+			//从claims拿roleIDs
+			roleIds := strings.Split(cl.Role_Ids, ",")
+			return roleIds, nil
+		}
+	} else {
+		waitUse := claims.(*systemReq.CustomClaims)
+		roleIds := strings.Split(waitUse.Role_Ids, ",")
+		return roleIds, nil
+	}
 }

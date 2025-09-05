@@ -18,9 +18,6 @@ import (
 
 type AccountApi struct{}
 
-var userService = service.ServiceGroupApp.SystemServiceGroup.UserService
-var jwtService = service.ServiceGroupApp.SystemServiceGroup.JwtService
-
 // Login
 // @Tags     AccountApi
 // @Summary  用户登录
@@ -43,7 +40,7 @@ func (b *AccountApi) Login(c *gin.Context) {
 		return
 	}
 	u := &system.SysUser{UserName: l.Username, UserPwd: l.Password}
-	user, err := userService.Login(u)
+	user, err := service.ServiceInstances.UserService.Login(u)
 	if err != nil {
 		global.GVA_LOG.Error("登陆失败! 用户名不存在或者密码错误!", zap.Error(err))
 		response.FailWithMessage("用户名不存在或者密码错误", c)
@@ -78,8 +75,8 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 	//	return
 	//}
 	//先从redis查询已经存在的token，如果没有就直接存入新的，
-	if jwtStr, err := jwtService.GetRedisJWT(int(user.User_Id)); err == redis.Nil {
-		if err := jwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
+	if jwtStr, err := service.ServiceInstances.JwtService.GetRedisJWT(int(user.User_Id)); err == redis.Nil {
+		if err := service.ServiceInstances.JwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
 			global.GVA_LOG.Error("设置登录状态失败!", zap.Error(err))
 			response.FailWithMessage("设置登录状态失败", c)
 			return
@@ -95,11 +92,11 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 		response.FailWithMessage("设置登录状态失败", c)
 	} else {
 		//老token放入黑名单
-		if err := jwtService.AddInBlacklist(jwtStr); err != nil {
+		if err := service.ServiceInstances.JwtService.AddInBlacklist(jwtStr); err != nil {
 			response.FailWithMessage("jwt作废失败", c)
 			return
 		}
-		if err := jwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
+		if err := service.ServiceInstances.JwtService.SetRedisJWT(token, int(user.User_Id)); err != nil {
 			response.FailWithMessage("设置登录状态失败", c)
 			return
 		}
@@ -133,7 +130,7 @@ func (b *AccountApi) Register(c *gin.Context) {
 	}
 
 	user := &system.SysUser{UserName: r.Username, UserPwd: r.Password, HeadImageUrl: r.HeaderImg, Enable: r.Enable, Mobile: r.Phone, Email: r.Email, Role_Ids: r.RoleIds}
-	userReturn, err := userService.Register(*user)
+	userReturn, err := service.ServiceInstances.UserService.Register(*user)
 	if err != nil {
 		global.GVA_LOG.Error("注册失败!", zap.Error(err))
 		response.FailWithDetailed(systemRes.SysUserResp{User: userReturn}, "注册失败", c)

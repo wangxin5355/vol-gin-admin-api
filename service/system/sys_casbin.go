@@ -8,8 +8,6 @@ import (
 
 type CasbinService struct{}
 
-var CasbinServiceApp = new(CasbinService)
-
 // 为用户分配多个角色
 func (s *CasbinService) AssignUserRoles(userID string, roleIDs []string) error {
 	// 先清除用户现有角色

@@ -10,10 +10,6 @@ import (
 type TestApi struct {
 }
 
-func getServiceGroup() *service.TestServiceGroup {
-	return &service.ServiceGroupApp.TestServiceGroup
-}
-
 // GetPageData
 // @Tags     TestApi
 // @Summary  获取分页数据
@@ -26,7 +22,7 @@ func (b *TestApi) GetPageData(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := getServiceGroup().GetPageData(param)
+	data := service.ServiceInstances.TestService.GetPageData(param)
 	response.OkWithData(data, c)
 }
 
@@ -42,7 +38,7 @@ func (b *TestApi) Add(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := getServiceGroup().Add(param)
+	data := service.ServiceInstances.TestService.Add(param)
 	response.OkWithData(data, c)
 }
 
@@ -58,7 +54,7 @@ func (b *TestApi) Update(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := getServiceGroup().Update(param)
+	data := service.ServiceInstances.TestService.Update(param)
 	response.OkWithData(data, c)
 }
 
@@ -76,6 +72,6 @@ func (b *TestApi) Del(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	data := getServiceGroup().Del(keys)
+	data := service.ServiceInstances.TestService.Del(keys)
 	response.OkWithData(data, c)
 }

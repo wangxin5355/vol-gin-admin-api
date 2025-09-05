@@ -7,8 +7,6 @@ import (
 
 type OperationRecordService struct{}
 
-var OperationRecordServiceApp = new(OperationRecordService)
-
 //@author: [wangxin]
 //@function: CreateSysOperationRecord
 //@description: 创建记录

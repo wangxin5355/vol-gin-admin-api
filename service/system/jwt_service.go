@@ -9,8 +9,6 @@ import (
 
 type JwtService struct{}
 
-var JwtServiceApp = new(JwtService)
-
 //@author: wangxin
 //@function: AddInBlacklist
 //@description: 拉黑jwt

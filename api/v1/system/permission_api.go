@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-var casbinService = service.ServiceGroupApp.SystemServiceGroup.CasbinService
-
 type PermissionApi struct{}
 
 // UpdateUserRoles
@@ -36,7 +34,7 @@ func (api *PermissionApi) UpdateUserRoles(c *gin.Context) {
 	// 更新用户角色
 	// 这里需要调用CasbinService的AssignUserRoles方法
 	strArray := strings.Split(req.RoleIds, ",")
-	err = casbinService.AssignUserRoles(strconv.Itoa(req.UserId), strArray)
+	err = service.ServiceInstances.CasbinService.AssignUserRoles(strconv.Itoa(req.UserId), strArray)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -75,7 +73,7 @@ func (api *PermissionApi) UpdateRolePermission(c *gin.Context) {
 
 	// 更新角色权限：先清除角色所有权限，在逐个添加菜单权限
 	// 这里需要调用CasbinService
-	_, err = casbinService.RemoveMenuPermissionsByRole(strconv.Itoa(req.RoleId))
+	_, err = service.ServiceInstances.CasbinService.RemoveMenuPermissionsByRole(strconv.Itoa(req.RoleId))
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
@@ -87,7 +85,7 @@ func (api *PermissionApi) UpdateRolePermission(c *gin.Context) {
 		if menuAction.Actions == nil || len(menuAction.Actions) == 0 {
 			continue
 		}
-		err = casbinService.AddMenuPermission(strconv.Itoa(req.RoleId), strconv.Itoa(menuAction.MenuId), menuAction.Actions)
+		err = service.ServiceInstances.CasbinService.AddMenuPermission(strconv.Itoa(req.RoleId), strconv.Itoa(menuAction.MenuId), menuAction.Actions)
 		if err != nil {
 			response.FailWithMessage(err.Error(), c)
 			return
@@ -115,7 +113,7 @@ func (api *PermissionApi) CheckRolePermission(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	hasPermission, err1 := casbinService.CheckPermission(strconv.Itoa(req.RoleId), strconv.Itoa(req.MenuId), req.Action)
+	hasPermission, err1 := service.ServiceInstances.CasbinService.CheckPermission(strconv.Itoa(req.RoleId), strconv.Itoa(req.MenuId), req.Action)
 	if err1 != nil {
 		response.FailWithMessage(err1.Error(), c)
 		return

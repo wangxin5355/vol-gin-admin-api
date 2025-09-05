@@ -19,8 +19,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var operationRecordService = service.ServiceGroupApp.SystemServiceGroup.OperationRecordService
-
 var respPool sync.Pool
 var bufferSize = 1024
 
@@ -115,7 +113,7 @@ func OperationRecord() gin.HandlerFunc {
 			}
 		}
 
-		if err := operationRecordService.CreateSysOperationRecord(record); err != nil {
+		if err := service.ServiceInstances.OperationRecordService.CreateSysOperationRecord(record); err != nil {
 			global.GVA_LOG.Error("create operation record error:", zap.Error(err))
 		}
 	}
