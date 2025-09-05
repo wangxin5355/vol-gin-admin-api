@@ -17,8 +17,8 @@ type SystemRouterGroup struct {
 	system.JwtRouter
 	system.AccountRouter
 	system.PermissionRouter
-	system.MenuRouter
-}
+    system.MenuRouter
+    system.SysTableInfoRouter}
 
 var RouterGroupApp = new(RouterGroup)
 

@@ -19,10 +19,11 @@ const (
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {
 	// 开始时间
-	c.JSON(http.StatusOK, Response{
-		code,
-		data,
-		msg,
+	c.JSON(http.StatusOK, WebResponseContent{
+		Status:  code == SUCCESS,
+		Code:    "200",
+		Message: msg,
+		Data:    data,
 	})
 }
 
@@ -46,6 +47,11 @@ func Ok(msg string, data any) *WebResponseContent {
 
 func Error(msg string) *WebResponseContent {
 	return &WebResponseContent{Status: false, Message: msg}
+}
+
+// WebResponse 返回WebResponseContent内容
+func WebResponse(resp *WebResponseContent, c *gin.Context) {
+	c.JSON(http.StatusOK, resp)
 }
 
 func OkWithContext(c *gin.Context) {

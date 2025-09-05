@@ -9,7 +9,7 @@ type PageResult struct {
 
 // 分页结果
 type PageGridData[T any] struct {
-	Rows    []T
-	Total   int
-	Summary any
+	Rows    []T `json:"rows"`
+	Total   int `json:"total"`
+	Summary any `json:"summary"` // 统计数据
 }

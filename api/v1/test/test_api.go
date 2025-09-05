@@ -38,8 +38,9 @@ func (b *TestApi) Add(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := service.ServiceInstances.TestService.Add(param)
+	data := service.ServiceInstances.TestService.Add(c, param)
 	response.OkWithData(data, c)
+
 }
 
 // Update
@@ -54,8 +55,9 @@ func (b *TestApi) Update(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := service.ServiceInstances.TestService.Update(param)
+	data := service.ServiceInstances.TestService.Update(c, param)
 	response.OkWithData(data, c)
+
 }
 
 // Del
@@ -72,6 +74,29 @@ func (b *TestApi) Del(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	data := service.ServiceInstances.TestService.Del(keys)
+	data := service.ServiceInstances.TestService.Del(c, keys)
 	response.OkWithData(data, c)
+
+}
+
+// GetCurrentUserInfo
+// @Tags     TestApi
+// @Summary  获取当前用户信息
+// @Produce  application/json
+// @Success 200 {object} response.Response{data=string} "获取当前用户
+// @Router   /test/GetCurrentUserInfo [get]
+func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
+	data := service.ServiceInstances.TestService.GetCurrentUserInfo(c)
+	response.WebResponse(data, c)
+}
+
+// RedisTest
+// @Tags     TestApi
+// @Summary  测试 Redis
+// @Produce  application/json
+// @Success 200 {object} response.Response{data=string} "测试 Redis
+// @Router   /test/RedisTest [get]
+func (b *TestApi) RedisTest(c *gin.Context) {
+	data := service.ServiceInstances.TestService.RedisTest()
+	response.WebResponse(data, c)
 }

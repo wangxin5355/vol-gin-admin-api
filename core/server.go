@@ -78,6 +78,7 @@ func initRouters() *gin.Engine {
 		exampleRouter.InitTestRouter(PublicGroup)
 		testRouter.InitTestRouter(PublicGroup)
 		systemRouter.InitPermissionRouter(PublicGroup)
+	    systemRouter.InitSysTableInfoRouter(PublicGroup)
 		systemRouter.InitMenuRouter(PrivateGroup) //需要鉴权
 	}
 
