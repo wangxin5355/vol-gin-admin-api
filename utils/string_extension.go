@@ -3,12 +3,12 @@ package utils
 import (
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // GenerateRandomNumber 生成指定长度的随机字符串
-var str = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
 func GenerateRandomNumber(length int) string {
+	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	var sb strings.Builder
 	k := len(str)
 	for i := 0; i < length; i++ {
@@ -52,12 +52,22 @@ func FirstLetterLower(str string) string {
 }
 
 // CamelCase 驼峰命名法
-func CamelCase(str string) string {
-	parts := strings.Split(str, "_")
-	for i := range parts {
-		parts[i] = FirstLetterUpper(parts[i])
+func CamelCase(s string) string {
+	if strings.Contains(s, "_") {
+		parts := strings.Split(s, "_")
+		for i := range parts {
+			if len(parts[i]) > 0 {
+				parts[i] = strings.ToUpper(parts[i][:1]) + strings.ToLower(parts[i][1:])
+			}
+		}
+		return strings.Join(parts, "")
 	}
-	return strings.Join(parts, "")
+	if len(s) == 0 {
+		return s
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
 }
 
 // CamelCaseLower 首字母小写的驼峰命名法
