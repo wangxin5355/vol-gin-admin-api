@@ -3,7 +3,6 @@ package code
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"text/template"
 
@@ -422,6 +421,7 @@ type TemplateData struct {
 	StructName  string
 	TableName   string
 	CnName      string
+	ImportPath  string
 	Fields      []Field
 }
 
@@ -461,10 +461,11 @@ func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (Templa
 	}
 
 	data := TemplateData{
-		PackageName: "model",
+		PackageName: tableInfo.FolderName,
 		StructName:  utils.CamelCase(tableInfo.Table_Name),
 		TableName:   tableInfo.Table_Name,
 		CnName:      tableInfo.CnName,
+		ImportPath:  tableInfo.FolderName,
 		Fields:      fields,
 	}
 
@@ -477,7 +478,7 @@ func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (Templa
 	if err != nil {
 		return TemplateData{}, err
 	}
-	filePath := filepath.Join(dirPath, "test_template.go")
+	filePath := filepath.Join(dirPath, data.TableName+".go")
 	f, err := os.Create(filePath)
 	if err != nil {
 		return TemplateData{}, err
@@ -501,7 +502,37 @@ func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (Templa
 	}
 
 	// 自动 gofmt 格式化
-	exec.Command("gofmt", "-w", filePath).Run()
+	//exec.Command("gofmt", "-w", filePath).Run()
+
+	//创建扩展类(已存在不覆盖)
+	partialFilePath := filepath.Join(dirPath, "partial", data.TableName+"_entity.go")
+	if _, err := os.Stat(partialFilePath); os.IsNotExist(err) {
+		err = os.MkdirAll(filepath.Join(dirPath, "partial"), os.ModePerm)
+		if err != nil {
+			return TemplateData{}, err
+		}
+		pf, err := os.Create(partialFilePath)
+		if err != nil {
+			return TemplateData{}, err
+		}
+		defer func() {
+			cerr := pf.Close()
+			if cerr != nil {
+				fmt.Fprintf(os.Stderr, "close file error: %v\n", cerr)
+			}
+		}()
+
+		partialTmplPath := filepath.Join(projectRoot, "tmpl", "model_partial.tmpl")
+		partialTmpl, err := template.ParseFiles(partialTmplPath)
+		if err != nil {
+			return TemplateData{}, err
+		}
+
+		err = partialTmpl.Execute(pf, data)
+		if err != nil {
+			return TemplateData{}, err
+		}
+	}
 
 	return data, nil
 }
