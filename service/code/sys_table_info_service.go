@@ -425,8 +425,8 @@ type TemplateData struct {
 	Fields      []Field
 }
 
-// CreateEntityModel 生成model文件
-func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (TemplateData, error) {
+// CreateModel 生成model文件
+func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData, error) {
 	tableId := req.TableId
 	// 获取表信息
 	var tableInfo system.SysTableInfo
@@ -539,10 +539,10 @@ func (s *SysTableInfoService) CreateEntityModel(req system.SysTableInfo) (Templa
 
 // columnMeta 字段元属性
 type columnMeta struct {
-	Nullable bool
-	Editable bool
-	Display  bool
-	Sortable bool
+	Nullable bool // 是否可为空
+	Editable bool // 是否可编辑
+	Display  bool // 是否显示
+	Sortable bool // 是否可排序
 }
 
 // generateColumnMeta 根据 SysTableColumn 自动生成字段元属性
@@ -554,3 +554,130 @@ func generateColumnMeta(col system.SysTableColumn) columnMeta {
 		Sortable: col.Sortable == 1,
 	}
 }
+
+// CreateServices 创建服务
+func (s *SysTableInfoService) CreateServices(req system.SysTableInfo) (TemplateData, error) {
+	tableId := req.TableId
+	// 获取表信息
+	var tableInfo, err = GetTableInfoById(tableId)
+	if err != nil {
+		return TemplateData{}, err
+	}
+	//检查命名空间和项目文件夹不能为空
+	if utils.IsNull(tableInfo.Namespace) || utils.IsNull(tableInfo.FolderName) {
+		return TemplateData{}, fmt.Errorf("命名空间和项目文件夹不能为空")
+	}
+	data := ConvertToTemplateData(tableInfo)
+	if data.TableName == "" || len(data.Fields) == 0 {
+		return TemplateData{}, fmt.Errorf("表信息不完整")
+	}
+	//生成service文件，存在就不覆盖
+	err = CreateServiceFile(data)
+	if err != nil {
+		return TemplateData{}, err
+	}
+
+	//创建 api、router
+	//TODO:api、router好处理，但是需要考虑服务注册还没考虑好
+	return data, nil
+}
+
+// GetTableInfoById 获取tableid获取表信息
+func GetTableInfoById(tableId int) (system.SysTableInfo, error) {
+	var tableInfo system.SysTableInfo
+	err := global.GVA_DB.
+		Model(&system.SysTableInfo{}).
+		Where("Table_Id = ?", tableId).
+		Preload("TableColumns", func(db *gorm.DB) *gorm.DB {
+			return db.Order("OrderNo ASC")
+		}).
+		First(&tableInfo).Error
+	if err != nil {
+		return system.SysTableInfo{}, err
+	}
+	return tableInfo, nil
+}
+
+// ConvertToTemplateData 将表信息转换为模板数据
+func ConvertToTemplateData(tableInfo system.SysTableInfo) TemplateData {
+	if tableInfo.TableId == 0 || len(tableInfo.TableColumns) == 0 {
+		return TemplateData{}
+	}
+
+	fields := make([]Field, 0, len(tableInfo.TableColumns))
+	for _, col := range tableInfo.TableColumns {
+		goFieldName := utils.CamelCase(col.ColumnName)
+		goType := utils.GoTypeWithNull(col.ColumnType, col.IsNull)
+		meta := generateColumnMeta(col)
+		fields = append(fields, Field{
+			Name:         goFieldName,
+			Type:         goType,
+			GormTag:      fmt.Sprintf("column:%s", goFieldName),
+			JsonName:     goFieldName,
+			Nullable:     meta.Nullable,
+			Editable:     meta.Editable,
+			Display:      meta.Display,
+			Key:          col.IsKey == 1,
+			ColumnCNName: col.ColumnCNName,
+			ColumnName:   col.ColumnName,
+		})
+	}
+
+	data := TemplateData{
+		PackageName: tableInfo.FolderName,
+		StructName:  utils.CamelCase(tableInfo.Table_Name),
+		TableName:   tableInfo.Table_Name,
+		CnName:      tableInfo.CnName,
+		ImportPath:  tableInfo.FolderName,
+		Fields:      fields,
+	}
+	return data
+}
+
+// CreateServiceFile 创建Service文件
+func CreateServiceFile(data TemplateData) error {
+	projectRoot, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	dirPath := filepath.Join(projectRoot, "service", data.PackageName)
+	err = os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	filePath := filepath.Join(dirPath, data.TableName+"_service.go")
+	if _, err := os.Stat(filePath); err == nil {
+		//文件已存在不覆盖
+		return nil
+	}
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		cerr := f.Close()
+		if cerr != nil {
+			fmt.Fprintf(os.Stderr, "close file error: %v\n", cerr)
+		}
+	}()
+
+	projectRoot, err = os.Getwd()
+	if err != nil {
+		return err
+	}
+	tmplPath := filepath.Join(projectRoot, "tmpl", "service.tmpl")
+	tmpl, err := template.ParseFiles(tmplPath)
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.Execute(f, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// 创建api文件
+
+// 创建router文件

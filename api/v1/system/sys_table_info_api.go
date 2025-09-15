@@ -39,20 +39,41 @@ func (s *SysTableInfoApi) LoadTableInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// CreateEntityModel 生成model文件
+// CreateModel 生成model文件
 // @Tags     SysTableInfo
 // @Summary  生成model文件
 // @Produce  application/json
 // @Param    data  body      system.SysTableInfo  true "参数"
 // @Success 200 {object} response.Response{data=response.WebResponseContent} "生成model文件"
-// @Router   /builder/createEntityModel [post]
-func (s *SysTableInfoApi) CreateEntityModel(c *gin.Context) {
+// @Router   /builder/createModel [post]
+func (s *SysTableInfoApi) CreateModel(c *gin.Context) {
 	var req system.SysTableInfo
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.WebResponse(response.Error("参数错误: tableId 必填"), c)
 		return
 	}
-	res, err := Service().CreateEntityModel(req)
+	res, err := Service().CreateModel(req)
+	if err != nil {
+		response.WebResponse(response.Error(err.Error()), c)
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// CreateServices 生成service文件
+// @Tags     SysTableInfo
+// @Summary  生成service文件
+// @Produce  application/json
+// @Param    data  body      system.SysTableInfo  true "参数"
+// @Success 200 {object} response.Response{data=response.WebResponseContent} "生成service文件"
+// @Router   /builder/createServices [post]
+func (s *SysTableInfoApi) CreateServices(c *gin.Context) {
+	var req system.SysTableInfo
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.WebResponse(response.Error("参数错误: tableId 必填"), c)
+		return
+	}
+	res, err := Service().CreateServices(req)
 	if err != nil {
 		response.WebResponse(response.Error(err.Error()), c)
 		return

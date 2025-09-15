@@ -120,3 +120,8 @@ func GoTypeWithNull(columnType string, isNull int) string {
 		return columnType
 	}
 }
+
+// 检查字符串是否为空或空白字符
+func IsNull(str string) bool {
+	return len(strings.TrimSpace(str)) == 0
+}
