@@ -26,7 +26,7 @@ func RunServer() {
 	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
 	s := initServer(address, Router)
 	global.GVA_LOG.Info("server run success on ", zap.String("address", address))
-	fmt.Printf("默认自动化文档地址:http://localhost%s/swagger/index.html", address)
+	fmt.Printf("默认自动化文档地址:http://localhost%s/api/swagger/index.html", address)
 	global.GVA_LOG.Error(s.ListenAndServe().Error())
 }
 
@@ -68,6 +68,7 @@ func initRouters() *gin.Engine {
 		c.JSON(http.StatusOK, "ok")
 	})
 	systemRouter.InitJwtRouter(PrivateGroup)
+
 	{
 		systemRouter.InitAccRouter(PublicGroup) // 注册Login,register 不需要鉴权的接口
 	}
@@ -78,7 +79,7 @@ func initRouters() *gin.Engine {
 		exampleRouter.InitTestRouter(PublicGroup)
 		testRouter.InitTestRouter(PublicGroup)
 		systemRouter.InitPermissionRouter(PublicGroup)
-	    systemRouter.InitSysTableInfoRouter(PublicGroup)
+		systemRouter.InitSysTableInfoRouter(PublicGroup)
 		systemRouter.InitMenuRouter(PrivateGroup) //需要鉴权
 	}
 

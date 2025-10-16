@@ -2,6 +2,7 @@ package system
 
 import (
 	"github.com/wangxin5355/vol-gin-admin-api/global"
+	"github.com/wangxin5355/vol-gin-admin-api/model"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
@@ -24,7 +25,7 @@ type AccountApi struct{}
 // @Produce   application/json
 // @Param    data  body      systemReq.LoginReq  true  "用户名, 密码"
 // @Success  200   {object}  response.Response{data=systemRes.LoginResp,msg=string}  "返回包括用户信息,token,过期时间"
-// @Router   /acc/login [post]
+// @Router   /user/login [post]
 func (b *AccountApi) Login(c *gin.Context) {
 	var l systemReq.LoginReq
 	err := c.ShouldBindJSON(&l)
@@ -82,7 +83,7 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 			return
 		}
 		//utils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
-		response.OkWithDetailed(systemRes.LoginResp{
+		response.OkWithDetailedAndBusinessCode(model.LoginSuccess, systemRes.LoginResp{
 			User:      user,
 			Token:     token,
 			ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
@@ -101,7 +102,7 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 			return
 		}
 		utils.SetToken(c, token, int(claims.RegisteredClaims.ExpiresAt.Unix()-time.Now().Unix()))
-		response.OkWithDetailed(systemRes.LoginResp{
+		response.OkWithDetailedAndBusinessCode(model.LoginSuccess, systemRes.LoginResp{
 			User:      user,
 			Token:     token,
 			ExpiresAt: claims.RegisteredClaims.ExpiresAt.Unix() * 1000,
@@ -115,7 +116,7 @@ func (b *AccountApi) TokenNext(c *gin.Context, user system.SysUser) {
 // @Produce   application/json
 // @Param    data  body     systemReq.Register   true  "用户名, 昵称, 密码, 角色ID"
 // @Success  200   {object}  response.Response{data=systemRes.SysUserResp,msg=string}  "用户注册账号,返回包括用户信息"
-// @Router   /acc/register [post]
+// @Router   /user/register [post]
 func (b *AccountApi) Register(c *gin.Context) {
 	var r systemReq.Register
 	err := c.ShouldBindJSON(&r)

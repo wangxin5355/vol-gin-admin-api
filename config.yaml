@@ -52,7 +52,7 @@ system:
   #  IP限制一个小时
   iplimit-time: 3600
   #  路由全局前缀
-  router-prefix: ''
+  router-prefix: '/api'
   #  严格角色模式 打开后权限将会存在上下级关系
   use-strict-auth: false
 

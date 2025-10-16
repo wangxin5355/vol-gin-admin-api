@@ -7,7 +7,6 @@ import (
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"net"
 	"strings"
-	"time"
 )
 
 func ClearToken(c *gin.Context) {
@@ -39,17 +38,18 @@ func SetToken(c *gin.Context, token string, maxAge int) {
 }
 
 func GetToken(c *gin.Context) string {
-	token := c.Request.Header.Get("x-token")
-	if token == "" {
-		j := NewJWT()
-		token, _ = c.Cookie("x-token")
-		claims, err := j.ParseToken(token)
-		if err != nil {
-			global.GVA_LOG.Error("重新写入cookie token失败,未能成功解析token,请检查请求头是否存在x-token且claims是否为规定结构")
-			return token
-		}
-		SetToken(c, token, int((claims.ExpiresAt.Unix()-time.Now().Unix())/60))
-	}
+	token := c.Request.Header.Get("Authorization")
+	token = strings.Replace(token, "Bearer ", "", -1)
+	//if token == "" {
+	//	j := NewJWT()
+	//	token, _ = c.Cookie("x-token")
+	//	claims, err := j.ParseToken(token)
+	//	if err != nil {
+	//		global.GVA_LOG.Error("重新写入cookie token失败,未能成功解析token,请检查请求头是否存在x-token且claims是否为规定结构")
+	//		return token
+	//	}
+	//	SetToken(c, token, int((claims.ExpiresAt.Unix()-time.Now().Unix())/60))
+	//}
 	return token
 }
 
