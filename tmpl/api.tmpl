@@ -1,0 +1,19 @@
+package {{.PackageName}}
+
+import (
+    "github.com/gin-gonic/gin"
+	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
+	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/service/{{.PackageName}}"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
+)
+
+
+type {{.StructName}}Api struct {}
+
+func Service() *{{.StructName}}Service {
+    return service.ServiceGroupApp.{{.PackageName}}Service
+}
+
+func (a *{{.StructName}}Api) GetPageData(c *gin.Context) {
+}

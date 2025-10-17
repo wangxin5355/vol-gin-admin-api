@@ -657,7 +657,7 @@ func CreateServiceFile(data TemplateData) error {
 	defer func() {
 		cerr := f.Close()
 		if cerr != nil {
-			fmt.Fprintf(os.Stderr, "close file error: %v\n", cerr)
+			fmt.Fprintf(os.Stderr, "关闭文件错误： %v\n", cerr)
 		}
 	}()
 
@@ -678,6 +678,6 @@ func CreateServiceFile(data TemplateData) error {
 	return nil
 }
 
-// 创建api文件
-
 // 创建router文件
+
+// 创建api文件
