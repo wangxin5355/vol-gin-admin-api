@@ -14,7 +14,7 @@ import (
 // @description                 vol快速开发框架基于go语言gin框架实现
 // @securityDefinitions.apikey  ApiKeyAuth
 // @in                          header
-// @name                        x-token
+// @name                        Authorization
 // @BasePath                    /
 func main() {
 	core.RunServer()

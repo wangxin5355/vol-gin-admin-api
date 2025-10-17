@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
+	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"sync"
@@ -23,7 +24,7 @@ var _menus []system.SysMenu
 var allmenuLock sync.Mutex
 
 // 获取对应角色的菜单列表
-func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int) (treeMenus []system.TreeMenu, err error) {
+func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int) (treeMenus []dto.TreeMenu, err error) {
 	var roleIds_int = utils.StringSliceToIntSliceFilter(roleIds)
 	if utils.IsRoleIdSuperAdmin(roleIds_int) { //如果是超管的，全部返回所有菜单和权限
 		sys_menus, err1 := menuService.getAllMenu()
@@ -31,13 +32,13 @@ func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int
 			return nil, err1
 		}
 		//转换成TreeMenu,预分配容量，提高性能
-		treeMenus = make([]system.TreeMenu, 0, len(sys_menus))
+		treeMenus = make([]dto.TreeMenu, 0, len(sys_menus))
 		for _, sysMenu := range sys_menus {
 			ps := make([]string, len(sysMenu.Actions))
 			for _, p := range sysMenu.Actions {
 				ps = append(ps, p.Value)
 			}
-			treeMenus = append(treeMenus, system.TreeMenu{
+			treeMenus = append(treeMenus, dto.TreeMenu{
 				ID:         sysMenu.Menu_Id,
 				Name:       sysMenu.MenuName,
 				Url:        sysMenu.Url,
@@ -61,11 +62,11 @@ func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int
 	}
 	//从所有菜单中，找到用户授权菜单，去除，
 	//预先建map，提高性能，
-	permissionsIndex := make(map[int]*system.Permission)
+	permissionsIndex := make(map[int]*dto.Permission)
 	for i := range permissions {
 		permissionsIndex[permissions[i].Menu_Id] = &permissions[i]
 	}
-	treeMenusIndex := make(map[int]system.TreeMenu)
+	treeMenusIndex := make(map[int]dto.TreeMenu)
 	for _, sysMenu := range sys_menus {
 		if sysMenu.MenuType != menuType {
 			continue
@@ -75,7 +76,7 @@ func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int
 			//检查这个菜单是否已经存在于菜单树中，去重
 			if _, exists := treeMenusIndex[sysMenu.Menu_Id]; !exists {
 				//检查这个菜单是否已经存在于菜单树中，去重,不存在才加入
-				treeMenusIndex[sysMenu.Menu_Id] = system.TreeMenu{
+				treeMenusIndex[sysMenu.Menu_Id] = dto.TreeMenu{
 					ID:         sysMenu.Menu_Id,
 					Name:       sysMenu.MenuName,
 					Url:        sysMenu.Url,
@@ -89,7 +90,7 @@ func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int
 		}
 	}
 	//map转切片
-	treeMenus = make([]system.TreeMenu, 0, len(treeMenusIndex))
+	treeMenus = make([]dto.TreeMenu, 0, len(treeMenusIndex))
 	for _, treeMenu := range treeMenusIndex {
 		treeMenus = append(treeMenus, treeMenu)
 	}
@@ -119,7 +120,7 @@ func (menuService *MenuService) getAllMenu() (menus []system.SysMenu, err error)
 		if menu.Auth != "" && len(menu.Auth) > 10 {
 			json.Unmarshal([]byte(menu.Auth), &menu.Actions)
 		} else {
-			menu.Actions = []system.Action{} //给个空切片，避免序列化问题
+			menu.Actions = []dto.Action{} //给个空切片，避免序列化问题
 		}
 	}
 	_cacheVersion, err = global.GVA_REDIS.Get(context.Background(), _menuCacheKey).Result()

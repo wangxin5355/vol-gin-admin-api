@@ -21,6 +21,8 @@ type ServiceInstance struct {
 	MenuService            *system.MenuService
 	PermissionService      *system.PermissionService //依赖实现
 	//PermissionService system.IPermissions //依赖接口，两种方式都可以,如果是大型项目，建议使用接口依赖
+	TableInfoService  *system.TableInfoService
+	DictionaryService *system.DictionaryService
 }
 
 var (
@@ -42,6 +44,8 @@ func InitServiceInstance() {
 			SystemConfigService:    &system.SystemConfigService{},
 			JwtService:             &system.JwtService{},
 			MenuService:            &system.MenuService{},
+			TableInfoService:       &system.TableInfoService{},
+			DictionaryService:      &system.DictionaryService{},
 		}
 		fmt.Println("ServiceInstances 单例已初始化")
 	})

@@ -19,6 +19,8 @@ type SystemApiGroup struct {
 	system.PermissionApi
 	system.MenuApi
 	system.SysTableInfoApi
+	system.BuilderApi
+	system.SysDictionaryApi
 }
 
 var ApiGroupApp = new(ApiGroup)

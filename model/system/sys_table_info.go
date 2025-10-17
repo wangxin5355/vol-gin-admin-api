@@ -26,5 +26,5 @@ type SysTableInfo struct {
 }
 
 func (SysTableInfo) TableName() string {
-	return "sys_tableinfo"
+	return "Sys_TableInfo"
 }

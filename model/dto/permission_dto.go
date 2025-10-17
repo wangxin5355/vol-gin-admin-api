@@ -1,4 +1,4 @@
-package system
+package dto
 
 // 菜单权限
 type MenuAction struct {

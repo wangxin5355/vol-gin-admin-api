@@ -19,7 +19,7 @@ type MenuApi struct {
 // @Summary  获取首页菜单树
 // @Security  ApiKeyAuth
 // @Produce   application/json
-// @Success  200   {object}  []system.TreeMenu  "返回的菜单树json"
+// @Success  200   {object}  []dto.TreeMenu  "返回的菜单树json"
 // @Router   /menu/GetTreeMenu [get]
 func (api *MenuApi) GetTreeMenu(c *gin.Context) {
 	//测试从contextt拿用户信息

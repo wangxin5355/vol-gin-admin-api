@@ -81,6 +81,9 @@ func initRouters() *gin.Engine {
 		systemRouter.InitPermissionRouter(PublicGroup)
 		systemRouter.InitSysTableInfoRouter(PublicGroup)
 		systemRouter.InitMenuRouter(PrivateGroup) //需要鉴权
+		systemRouter.InitBuilderRouter(PrivateGroup)
+		systemRouter.InitSysDictionaryRouter(PrivateGroup)
+
 	}
 
 	global.GVA_ROUTERS = Router.Routes()

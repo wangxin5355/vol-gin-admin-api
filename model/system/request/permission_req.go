@@ -1,6 +1,8 @@
 package request
 
-import "github.com/wangxin5355/vol-gin-admin-api/model/system"
+import (
+	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
+)
 
 // 更新用户角色的结构体
 // UpdateUserRoleReq structure
@@ -12,8 +14,8 @@ type UpdateUserRoleReq struct {
 // 更新角色菜单的结构体
 // UpdateRolePermissionReq structure
 type UpdateRolePermissionReq struct {
-	RoleId     int                 `json:"roleId"`
-	MenuAction []system.MenuAction `json:"menuAction"` // 菜单权限数组
+	RoleId     int              `json:"roleId"`
+	MenuAction []dto.MenuAction `json:"menuAction"` // 菜单权限数组
 }
 
 type CheckRolePermissionReq struct {

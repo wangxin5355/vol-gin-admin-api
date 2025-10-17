@@ -8,7 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model"
-	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"log"
 	"strconv"
@@ -50,7 +50,7 @@ func GetPermissionService() *PermissionService {
 }
 
 // 获取角色权限，并缓存
-func (permissionService *PermissionService) GetPermissions(roleId int) (userInter []system.Permission, err error) {
+func (permissionService *PermissionService) GetPermissions(roleId int) (userInter []dto.Permission, err error) {
 	var roleIdStr = strconv.Itoa(roleId)
 	var roleKey = getRoleIdKey(roleIdStr)
 	cacheRolePermissionsVersion, err := global.GVA_REDIS.Get(context.Background(), roleKey).Result()
@@ -61,7 +61,7 @@ func (permissionService *PermissionService) GetPermissions(roleId int) (userInte
 	//角色有缓存，并且当前服务器的角色版本号与redis/memory缓存角色的版本号相同直接返回静态对象角色权限
 	if currnetVeriosn, isOk := rolePermissionsVersion.Load(roleIdStr); isOk && cacheRolePermissionsVersion == currnetVeriosn.(string) {
 		if permissionCahe, ok := rolePermissions.Load(roleIdStr); ok {
-			if permissions, assertOk := permissionCahe.([]system.Permission); assertOk {
+			if permissions, assertOk := permissionCahe.([]dto.Permission); assertOk {
 				return permissions, nil
 			}
 		}
@@ -77,7 +77,7 @@ func (permissionService *PermissionService) GetPermissions(roleId int) (userInte
 	//	}
 	//}
 	//再从DB查询
-	var permissions []system.Permission
+	var permissions []dto.Permission
 	result := global.GVA_DB.Raw("SELECT a.Menu_Id,a.ParentId,a.TableName,a.Auth as MenuAuth, b.AuthValue as UserAuth,a.MenuType FROM `sys_menu` a left join `sys_roleauth`  b on a.Menu_Id=b.Menu_Id where b.Role_Id=? and b.AuthValue !='' ORDER BY a.ParentId", roleId).Scan(&permissions)
 	if result.Error != nil {
 		log.Fatal(result.Error)
@@ -104,12 +104,12 @@ func (permissionService *PermissionService) GetPermissions(roleId int) (userInte
 }
 
 // 获取多角色权限，并缓存
-func (permissionService *PermissionService) GetPermissionsMultipleRoles(roleIds []int) (userInter []system.Permission, err error) {
+func (permissionService *PermissionService) GetPermissionsMultipleRoles(roleIds []int) (userInter []dto.Permission, err error) {
 	if len(roleIds) == 0 {
 		return nil, errors.New("角色数组不能为空")
 	}
 	if utils.IsRoleIdSuperAdmin(roleIds) { //如果是超管的，全部返回所有菜单和权限
-		var permissions []system.Permission
+		var permissions []dto.Permission
 		result := global.GVA_DB.Raw("SELECT Menu_Id,ParentId,TableName,Auth as UserAuth,MenuType FROM `sys_menu` ").Scan(&permissions)
 		if result.Error != nil {
 			log.Fatal(result.Error)
@@ -129,7 +129,7 @@ func (permissionService *PermissionService) GetPermissionsMultipleRoles(roleIds 
 	//角色有缓存，并且当前服务器的角色版本号与redis/memory缓存角色的版本号相同直接返回静态对象角色权限
 	if currnetVeriosn, isOk := rolePermissionsVersion.Load(roleIdStr); isOk && cacheRolePermissionsVersion == currnetVeriosn.(string) {
 		if permissionCahe, ok := rolePermissions.Load(roleIdStr); ok {
-			if permissions, assertOk := permissionCahe.([]system.Permission); assertOk {
+			if permissions, assertOk := permissionCahe.([]dto.Permission); assertOk {
 				return permissions, nil
 			}
 		}
@@ -145,7 +145,7 @@ func (permissionService *PermissionService) GetPermissionsMultipleRoles(roleIds 
 	//	}
 	//}
 	//再从DB查询
-	var permissions []system.Permission
+	var permissions []dto.Permission
 	result := global.GVA_DB.Raw("SELECT a.Menu_Id,a.ParentId,a.TableName,a.Auth as MenuAuth, b.AuthValue as UserAuth,a.MenuType FROM `sys_menu` a left join `sys_roleauth`  b on a.Menu_Id=b.Menu_Id where b.Role_Id in (?) and b.AuthValue !='' ORDER BY a.ParentId", roleIds).Scan(&permissions)
 	if result.Error != nil {
 		log.Fatal(result.Error)
@@ -175,14 +175,14 @@ func getRoleIdKey(roleId string) string {
 }
 
 // 将action解析出来，并拼接
-func actionToArray(permissions []system.Permission) (err error) {
+func actionToArray(permissions []dto.Permission) (err error) {
 	for _, permission := range permissions {
 		permission.TableName = strings.ToLower(permission.TableName)
 		//if permission.MenuAuth==""{
 		//permission.UserAuthArr = []string{}
 		//continue
 		//}
-		var actions []system.Action
+		var actions []dto.Action
 		err := json.Unmarshal([]byte(permission.MenuAuth), &actions)
 		if err != nil {
 			log.Fatal("反序列化失败:", err)
@@ -194,7 +194,7 @@ func actionToArray(permissions []system.Permission) (err error) {
 	return nil
 }
 
-func menuActionToArray(permissions []system.Permission) (err error) {
+func menuActionToArray(permissions []dto.Permission) (err error) {
 	for _, permission := range permissions {
 		permission.TableName = strings.ToLower(permission.TableName)
 		//if permission.MenuAuth==""{
@@ -204,7 +204,7 @@ func menuActionToArray(permissions []system.Permission) (err error) {
 		if permission.UserAuth == "" || permission.UserAuth == "[]" {
 			continue
 		}
-		var actions []system.Action
+		var actions []dto.Action
 		err := json.Unmarshal([]byte(permission.UserAuth), &actions)
 		if err != nil {
 			log.Fatal("反序列化失败:", err)
@@ -216,7 +216,7 @@ func menuActionToArray(permissions []system.Permission) (err error) {
 	return nil
 }
 
-func extractActionValue(actions []system.Action) []string {
+func extractActionValue(actions []dto.Action) []string {
 	values := make([]string, len(actions))
 	for i, action := range actions {
 		values[i] = action.Value
