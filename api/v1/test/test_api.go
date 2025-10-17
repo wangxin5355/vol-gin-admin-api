@@ -4,27 +4,36 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/service/test"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 type TestApi struct {
+	//base.BaseApi[system.SysUser, base.ServiceInterface[system.SysUser]]
+	//base.BaseApi[partial.TestTemplateEntity, base.ServiceInterface[partial.TestTemplateEntity]]
+	//base.BaseApi[partial.TestTemplateEntity, *test.TestService]
 }
 
-// GetPageData
-// @Tags     TestApi
-// @Summary  获取分页数据
-// @Produce  application/json
-// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
-// @Success 200 {object} response.Response{data=[]system.SysUser} "返回分页数据"
-// @Router   /test/GetPageData [post]
-func (b *TestApi) GetPageData(c *gin.Context) {
-	param, err := utils.BindJsonToPageDataOptions(c)
-	if err != nil {
-		return
-	}
-	data := service.ServiceInstances.TestService.GetPageData(param)
-	response.OkWithData(data, c)
+// Service 重写 Service 方法
+func (b *TestApi) Service() *test.TestService {
+	return service.ServiceInstances.TestService
 }
+
+//// GetPageData
+//// @Tags     TestApi
+//// @Summary  获取分页数据
+//// @Produce  application/json
+//// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
+//// @Success 200 {object} response.Response{data=[]system.SysUser} "返回分页数据"
+//// @Router   /test/GetPageData [post]
+//func (b *TestApi) GetPageData(c *gin.Context) {
+//	param, err := utils.BindJsonToPageDataOptions(c)
+//	if err != nil {
+//		return
+//	}
+//	data := Service().GetPageData(param)
+//	response.OkWithData(data, c)
+//}
 
 // Add
 // @Tags     TestApi
@@ -38,9 +47,8 @@ func (b *TestApi) Add(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := service.ServiceInstances.TestService.Add(c, param)
+	data := b.Service().Add(c, param)
 	response.OkWithData(data, c)
-
 }
 
 // Update
@@ -55,7 +63,7 @@ func (b *TestApi) Update(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	data := service.ServiceInstances.TestService.Update(c, param)
+	data := b.Service().Update(c, param)
 	response.OkWithData(data, c)
 
 }
@@ -74,7 +82,7 @@ func (b *TestApi) Del(c *gin.Context) {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	data := service.ServiceInstances.TestService.Del(c, keys)
+	data := b.Service().Del(c, keys)
 	response.OkWithData(data, c)
 
 }
@@ -86,7 +94,7 @@ func (b *TestApi) Del(c *gin.Context) {
 // @Success 200 {object} response.Response{data=string} "获取当前用户
 // @Router   /test/GetCurrentUserInfo [get]
 func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
-	data := service.ServiceInstances.TestService.GetCurrentUserInfo(c)
+	data := b.Service().GetCurrentUserInfo(c)
 	response.WebResponse(data, c)
 }
 
@@ -97,6 +105,6 @@ func (b *TestApi) GetCurrentUserInfo(c *gin.Context) {
 // @Success 200 {object} response.Response{data=string} "测试 Redis
 // @Router   /test/RedisTest [get]
 func (b *TestApi) RedisTest(c *gin.Context) {
-	data := service.ServiceInstances.TestService.RedisTest()
+	data := b.Service().RedisTest()
 	response.WebResponse(data, c)
 }

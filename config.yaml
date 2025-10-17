@@ -43,7 +43,7 @@ redis-list:
 # system configuration
 system:
   env: local # 修改为public可以关闭路由日志输出
-  addr: 8888
+  addr: 9991
   db-type: mysql
   use-redis: true # 使用redis
   use-multipoint: false
