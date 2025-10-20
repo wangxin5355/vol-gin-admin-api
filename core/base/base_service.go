@@ -254,7 +254,7 @@ func add[T, T2 any](c *gin.Context,
 	//先查一下有没有
 	detailData := options.DetailData
 	if detailData != nil && len(detailData) > 0 {
-
+		return addDetail[T2](c, db, &entity, options)
 	}
 	// 保存后事件结果
 	var afterResp *response.WebResponseContent
@@ -279,15 +279,86 @@ func add[T, T2 any](c *gin.Context,
 	return response.Ok("添加成功", entity)
 }
 
+// 添加明细
+func addDetail[T2 any](c *gin.Context,
+	db *gorm.DB,
+	entity *T2, options request.SaveModel) *response.WebResponseContent {
+	//获取实体信息
+	//根据实体信息获取明细的实体
+	var master T2
+	meta := attribute_manager.GetEntityMeta(master)
+	if len(meta.DetailTable) == 0 {
+		return response.Ok("添加成功", entity)
+	}
+
+	//把optnios.DetailData的数据转换为实例类
+	var detailData = options.DetailData
+	//定义slicePtr
+	var slicePtr reflect.Value
+	if detailData != nil && len(detailData) > 0 {
+		for i, detailTableMeta := range meta.DetailTable {
+			detailType := detailTableMeta
+			slicePtr = reflect.New(reflect.SliceOf(detailType))
+			if b, err := json.Marshal(detailData[i]); err == nil {
+				_ = json.Unmarshal(b, slicePtr.Interface())
+			}
+		}
+	}
+	var userInfo = GetUserInfo(c)
+	utils.SetDefaultValue[T2](entity, true, userInfo.UserID, userInfo.Username)
+	//开启事务保存主表和明细表
+	err := db.Transaction(func(tx *gorm.DB) error {
+		//保存主表,并且拿到主键值赋给明细表
+		if err := tx.Create(&entity).Error; err != nil {
+			return err
+		}
+		//获取主键字段及值
+		stmt := &gorm.Statement{DB: db}
+		if err := stmt.Parse(&entity); err != nil {
+			return err
+		}
+		primaryField := stmt.Schema.PrioritizedPrimaryField
+		if primaryField == nil {
+			return fmt.Errorf("未找到主键定义")
+		}
+		pkVal := stmt.ReflectValue.FieldByName(primaryField.Name).Interface()
+		//保存明细表
+		if slicePtr.IsValid() && slicePtr.Elem().Len() > 0 {
+			for j := 0; j < slicePtr.Elem().Len(); j++ {
+				detailItem := slicePtr.Elem().Index(j)
+				//给明细表赋值主表的主键值
+				detailItem.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))
+			}
+			//TODO:明细表赋值默认值问题
+			if err := tx.Create(slicePtr.Elem().Interface()).Error; err != nil {
+				return err
+			}
+		}
+		//提交事务
+		return nil
+	})
+	if err != nil {
+		return response.Error("添加失败: " + err.Error())
+	}
+	return response.Ok("添加成功", entity)
+}
+
 // update 更新数据，只更新实体中存在的字段且排除主键
 func update[T, T2 any](c *gin.Context,
 	db *gorm.DB,
 	options request.SaveModel,
 	UpdateOnExecuting,
 	UpdateOnExecuted func(*T2) *response.WebResponseContent) *response.WebResponseContent {
+
 	// 用 DicToEntity[T2] 生成业务实体
 	//entity := utils.DicToEntity[T2](options.MainData)
 	entity := utils.MapToEntity[T2](options.MainData)
+
+	//判断有明细的话直接走明细更新
+	detailData := options.DetailData
+	if detailData != nil && len(detailData) > 0 {
+		return updateDetail[T2](c, db, &entity, options)
+	}
 	var userInfo = GetUserInfo(c)
 	utils.SetDefaultValue[T2](&entity, false, userInfo.UserID, userInfo.Username)
 
@@ -338,6 +409,70 @@ func update[T, T2 any](c *gin.Context,
 			afterResp = UpdateOnExecuted(&entity)
 			if afterResp.Status == false {
 				return fmt.Errorf(afterResp.Message)
+			}
+		}
+		//提交事务
+		return nil
+	})
+	if err != nil {
+		return response.Error("更新失败: " + err.Error())
+	}
+	return response.Ok("更新成功", entity)
+}
+
+// update 明细
+func updateDetail[T2 any](c *gin.Context,
+	db *gorm.DB,
+	entity *T2, options request.SaveModel) *response.WebResponseContent {
+	//获取实体信息
+	//根据实体信息获取明细的实体
+	var master T2
+	meta := attribute_manager.GetEntityMeta(master)
+	if len(meta.DetailTable) == 0 {
+		return response.Ok("更新成功", entity)
+	}
+
+	//把optnios.DetailData的数据转换为实例类
+	var detailData = options.DetailData
+	//定义slicePtr
+	var slicePtr reflect.Value
+	if detailData != nil && len(detailData) > 0 {
+		for i, detailTableMeta := range meta.DetailTable {
+			detailType := detailTableMeta
+			slicePtr = reflect.New(reflect.SliceOf(detailType))
+			if b, err := json.Marshal(detailData[i]); err == nil {
+				_ = json.Unmarshal(b, slicePtr.Interface())
+			}
+		}
+	}
+	var userInfo = GetUserInfo(c)
+	utils.SetDefaultValue[T2](entity, false, userInfo.UserID, userInfo.Username)
+	//开启事务保存主表和明细表
+	err := db.Transaction(func(tx *gorm.DB) error {
+		//保存主表,并且拿到主键值赋给明细表
+		if err := tx.Save(&entity).Error; err != nil {
+			return err
+		}
+		//获取主键字段及值
+		stmt := &gorm.Statement{DB: db}
+		if err := stmt.Parse(&entity); err != nil {
+			return err
+		}
+		primaryField := stmt.Schema.PrioritizedPrimaryField
+		if primaryField == nil {
+			return fmt.Errorf("未找到主键定义")
+		}
+		pkVal := stmt.ReflectValue.FieldByName(primaryField.Name).Interface()
+		//修改明细表
+		if slicePtr.IsValid() && slicePtr.Elem().Len() > 0 {
+			for j := 0; j < slicePtr.Elem().Len(); j++ {
+				detailItem := slicePtr.Elem().Index(j)
+				//给明细表赋值主表的主键值
+				detailItem.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))
+			}
+			//TODO:明细表赋值默认值问题
+			if err := tx.Save(slicePtr.Elem().Interface()).Error; err != nil {
+				return err
 			}
 		}
 		//提交事务
@@ -400,6 +535,10 @@ func del[T, T2 any](c *gin.Context,
 	}
 	return response.Ok("删除成功", nil)
 }
+
+//-------------------------------
+// 工具方法
+//-------------------------------
 
 // GetUserInfo 获取用户信息
 func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
