@@ -3,10 +3,12 @@ package base
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
+	"github.com/wangxin5355/vol-gin-admin-api/model/attribute_manager"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/request"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
@@ -54,6 +56,10 @@ func NewBaseService[T, T2 any](dbName string) *BaseService[T, T2] {
 // getPageData 分页查询
 func (s *BaseService[T, T2]) GetPageData(options request.PageDataOptions) *response.PageGridData[T] {
 	return getPageData[T, T2](s.DB, options, s.QueryRelativeExpression, s.SummaryExpress, s.GetPageDataOnExecuted)
+}
+
+func (s *BaseService[T, T2]) GetDetailPage(options request.PageDataOptions) *response.PageGridData[map[string]any] {
+	return GetDetailPage[T](s.DB, options)
 }
 
 // add 添加
@@ -181,6 +187,53 @@ func getPageData[T, T2 any](db *gorm.DB,
 	return res
 }
 
+// GetDetailPage 获取明细表分页数据（按泛型 T 执行查询，不依赖外部 DetailTable 元数据）
+func GetDetailPage[T any](db *gorm.DB, options request.PageDataOptions) *response.PageGridData[map[string]any] {
+	var total int64
+
+	// 默认分页修正
+	if options.Page <= 0 {
+		options.Page = 1
+	}
+	if options.Rows <= 0 {
+		options.Rows = 10
+	}
+
+	//获取明细的结构体
+	var master T
+	meta := attribute_manager.GetEntityMeta(master)
+	if len(meta.DetailTable) == 0 {
+		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
+	}
+	detailType := meta.DetailTable[0]
+	modelInst := reflect.New(detailType).Interface()
+	q := db.Model(modelInst)
+
+	q = ApplyJsonWhereToDB(q, options)
+	q = ApplyJsonSortToDB(q, options)
+
+	countQuery := q.Session(&gorm.Session{})
+	if err := countQuery.Count(&total).Error; err != nil {
+		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
+	}
+
+	slicePtr := reflect.New(reflect.SliceOf(detailType))
+	q = ApplyJsonPageToDB(q, options)
+	if err := q.Find(slicePtr.Interface()).Error; err != nil {
+		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
+	}
+	// 转换为 []map[string]any 返回
+	var rows []map[string]any
+	if b, err := json.Marshal(slicePtr.Elem().Interface()); err == nil {
+		_ = json.Unmarshal(b, &rows)
+	}
+	return &response.PageGridData[map[string]any]{
+		Total:   int(total),
+		Rows:    rows,
+		Summary: nil,
+	}
+}
+
 // add 添加数据
 func add[T, T2 any](c *gin.Context,
 	db *gorm.DB,
@@ -200,6 +253,12 @@ func add[T, T2 any](c *gin.Context,
 		if beforeResp.Status == false {
 			return beforeResp
 		}
+	}
+	//明细表处理
+	//先查一下有没有
+	detailData := options.DetailData
+	if detailData != nil && len(detailData) > 0 {
+
 	}
 	// 保存后事件结果
 	var afterResp *response.WebResponseContent
