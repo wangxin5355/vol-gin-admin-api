@@ -59,7 +59,12 @@ func (s *BaseService[T, T2]) GetPageData(options request.PageDataOptions) *respo
 }
 
 func (s *BaseService[T, T2]) GetDetailPage(options request.PageDataOptions) *response.PageGridData[map[string]any] {
-	return GetDetailPage[T](s.DB, options)
+	var master T
+	meta := attribute_manager.GetEntityMeta(master)
+	if len(meta.DetailTable) == 0 {
+		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
+	}
+	return GetDetailPage(s.DB, meta, options)
 }
 
 // add 添加
@@ -188,9 +193,8 @@ func getPageData[T, T2 any](db *gorm.DB,
 }
 
 // GetDetailPage 获取明细表分页数据（按泛型 T 执行查询，不依赖外部 DetailTable 元数据）
-func GetDetailPage[T any](db *gorm.DB, options request.PageDataOptions) *response.PageGridData[map[string]any] {
+func GetDetailPage(db *gorm.DB, detailEntityType attribute_manager.EntityMeta, options request.PageDataOptions) *response.PageGridData[map[string]any] {
 	var total int64
-
 	// 默认分页修正
 	if options.Page <= 0 {
 		options.Page = 1
@@ -198,16 +202,8 @@ func GetDetailPage[T any](db *gorm.DB, options request.PageDataOptions) *respons
 	if options.Rows <= 0 {
 		options.Rows = 10
 	}
-
-	//获取明细的结构体
-	var master T
-	meta := attribute_manager.GetEntityMeta(master)
-	if len(meta.DetailTable) == 0 {
-		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
-	}
-	detailType := meta.DetailTable[0]
-	modelInst := reflect.New(detailType).Interface()
-	q := db.Model(modelInst)
+	detailType := detailEntityType.DetailTable[0]
+	q := db.Model(reflect.New(detailType).Interface())
 
 	q = ApplyJsonWhereToDB(q, options)
 	q = ApplyJsonSortToDB(q, options)
