@@ -6,6 +6,7 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"go.uber.org/zap"
 )
 
@@ -42,6 +43,9 @@ func init() {
 
 	// 初始化服务分组，确保数据库已初始化
 	importedServiceInit()
+
+	//代码生成调试
+	utils.GenerateTest()
 }
 
 // 新增一个辅助函数用于调用服务初始化，避免 import 循环
