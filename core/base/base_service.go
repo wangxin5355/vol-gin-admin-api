@@ -328,8 +328,10 @@ func addDetail[T2 any](c *gin.Context,
 				detailItem := slicePtr.Elem().Index(j)
 				//给明细表赋值主表的主键值
 				detailItem.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))
+
+				//明细表赋值默认值
+				utils.SetDetailDefaultValue(detailItem.Addr().Interface(), true, userInfo.UserID, userInfo.Username)
 			}
-			//TODO:明细表赋值默认值问题
 			if err := tx.Create(slicePtr.Elem().Interface()).Error; err != nil {
 				return err
 			}
@@ -469,6 +471,8 @@ func updateDetail[T2 any](c *gin.Context,
 				detailItem := slicePtr.Elem().Index(j)
 				//给明细表赋值主表的主键值
 				detailItem.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))
+				//明细表赋值默认值
+				utils.SetDetailDefaultValue(detailItem.Addr().Interface(), false, userInfo.UserID, userInfo.Username)
 			}
 			//TODO:明细表赋值默认值问题
 			if err := tx.Save(slicePtr.Elem().Interface()).Error; err != nil {

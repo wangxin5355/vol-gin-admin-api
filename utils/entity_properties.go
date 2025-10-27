@@ -289,6 +289,12 @@ func setDefaultValueByReflect(v reflect.Value, isAdd bool, userID uint32, userNa
 	}
 }
 
+// 给明细表的集合附上默认值 接收detailItem.Addr().Interface()
+func SetDetailDefaultValue(detailItem any, isAdd bool, userID uint32, userName string) {
+	v := reflect.ValueOf(detailItem).Elem()
+	setDefaultValueByReflect(v, isAdd, userID, userName)
+}
+
 // 判断字段是否存在（支持嵌套结构体）
 func hasFieldRecursive(t reflect.Type, name string) bool {
 	for i := 0; i < t.NumField(); i++ {
