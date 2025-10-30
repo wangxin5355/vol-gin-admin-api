@@ -59,9 +59,9 @@ func (s *BaseService[T, T2]) GetPageData(options request.PageDataOptions) *respo
 }
 
 func (s *BaseService[T, T2]) GetDetailPage(options request.PageDataOptions) *response.PageGridData[map[string]any] {
-	var master T
+	var master T2
 	meta := attribute_manager.GetEntityMeta(master)
-	if len(meta.DetailTable) == 0 {
+	if utils.IsNull(meta.DetailTableStr) {
 		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
 	}
 	return GetDetailPage(s.DB, meta, options)
@@ -202,26 +202,22 @@ func GetDetailPage(db *gorm.DB, detailEntityType attribute_manager.EntityMeta, o
 	if options.Rows <= 0 {
 		options.Rows = 10
 	}
-	detailType := detailEntityType.DetailTable[0]
-	q := db.Model(reflect.New(detailType).Interface())
+	q := db.Table(detailEntityType.DetailTableStr)
 
 	q = ApplyJsonWhereToDB(q, options)
 	q = ApplyJsonSortToDB(q, options)
+
+	//条件必须加上主表的主键条件
+	q = q.Where(fmt.Sprintf("%s = ?", detailEntityType.Key), options.Value)
 
 	countQuery := q.Session(&gorm.Session{})
 	if err := countQuery.Count(&total).Error; err != nil {
 		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
 	}
-
-	slicePtr := reflect.New(reflect.SliceOf(detailType))
 	q = ApplyJsonPageToDB(q, options)
-	if err := q.Find(slicePtr.Interface()).Error; err != nil {
-		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
-	}
-	// 转换为 []map[string]any 返回
 	var rows []map[string]any
-	if b, err := json.Marshal(slicePtr.Elem().Interface()); err == nil {
-		_ = json.Unmarshal(b, &rows)
+	if err := q.Find(&rows).Error; err != nil {
+		return &response.PageGridData[map[string]any]{Rows: nil, Total: 0}
 	}
 	return &response.PageGridData[map[string]any]{
 		Total:   int(total),

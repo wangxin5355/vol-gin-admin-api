@@ -32,6 +32,15 @@ func (b *SysDictionaryApi) GetPageData(c *gin.Context) {
 	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
 }
 
+func (b *SysDictionaryApi) GetDetailPage(c *gin.Context) {
+	param, err := utils.BindJsonToPageDataOptions(c)
+	if err != nil {
+		return
+	}
+	data := b.SysDictionaryService().GetDetailPage(param)
+	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
+}
+
 // GetBuilderDictionary
 // @Tags     SysDictionaryApi
 // @Summary   代码生成器获取所有字典项(超级管理权限)

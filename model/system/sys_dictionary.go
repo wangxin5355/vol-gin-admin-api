@@ -7,7 +7,7 @@ import (    "time"
 // 字典数据 (Sys_Dictionary)
 type SysDictionary struct {
     //第一项是固定的 写描述信息
-    _ struct{} `entity:"TableCnName=字典数据;TableName=Sys_Dictionary;DetailTable=Sys_DictionaryList;DetailTableCnName=字典明细;DBServer=gin"`
+    _ struct{} `entity:"TableCnName=字典数据;TableName=Sys_Dictionary;DetailTable=Sys_DictionaryList;DetailTableCnName=字典明细;DBServer=gin;Key=Dic_ID"`
     ModifyDate *time.Time `json:"ModifyDate" gorm:"column:ModifyDate;comment:修改时间"`
     Modifier *string `json:"Modifier" gorm:"column:Modifier;comment:修改人"`
     ModifyID int `json:"ModifyID" gorm:"column:ModifyID"`

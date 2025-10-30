@@ -428,6 +428,7 @@ type TemplateData struct {
 	DBServer          string // 数据库
 	DetailTable       string // 明细表
 	DetailTableCnName string // 明细表中文名称
+	Key               string // 主键
 }
 
 // CreateModel 生成model文件
@@ -616,6 +617,13 @@ func ConvertToTemplateData(tableInfo system.SysTableInfo) TemplateData {
 		DBServer:          tableInfo.DBServer, //如果没有默认等于第一个数据库
 		DetailTable:       tableInfo.DetailName,
 		DetailTableCnName: tableInfo.DetailCnName,
+	}
+	//获取fields中的第一个不为空的Key字段
+	for _, f := range fields {
+		if f.Key {
+			data.Key = f.ColumnName
+			break
+		}
 	}
 	if utils.IsNull(data.DBServer) {
 		data.DBServer = initialize.GetFirstDbConfigName()

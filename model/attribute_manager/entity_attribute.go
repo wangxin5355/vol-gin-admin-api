@@ -10,8 +10,10 @@ type EntityMeta struct {
 	TableCnName       string
 	TableName         string
 	DetailTable       []reflect.Type
+	DetailTableStr    string
 	DetailTableCnName string
 	DBServer          string
+	Key               string //主表和明细表的关联键
 }
 
 // GetEntityMeta 读取标签并解析到 EntityMeta 结构体中
@@ -58,7 +60,16 @@ func GetEntityMeta(v interface{}) EntityMeta {
 		meta.DBServer = v
 	}
 
-	// DetailTable 无法从字符串直接恢复为 reflect.Type，保持为空或由调用方另外设置
+	if v, ok := attrs["detail_table"]; ok && v != "" {
+		meta.DetailTableStr = v
+	} else if v, ok := attrs["detailtable"]; ok && v != "" {
+		meta.DetailTableStr = v
+	}
+	if v, ok := attrs["key"]; ok && v != "" {
+		meta.Key = v
+	} else if v, ok := attrs["Key"]; ok && v != "" {
+		meta.Key = v
+	}
 	return meta
 }
 
