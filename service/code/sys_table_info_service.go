@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -445,50 +446,21 @@ func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData
 		return TemplateData{}, err
 	}
 
-	fields := make([]Field, 0, len(tableInfo.TableColumns))
-	for _, col := range tableInfo.TableColumns {
-		goFieldName := utils.CamelCase(col.ColumnName)
-		goType := utils.GoTypeWithNull(col.ColumnType, col.IsNull)
-		meta := generateColumnMeta(col)
-		fields = append(fields, Field{
-			Name:         goFieldName,
-			Type:         goType,
-			GormTag:      fmt.Sprintf("column:%s", goFieldName),
-			JsonName:     goFieldName,
-			Nullable:     meta.Nullable,
-			Editable:     meta.Editable,
-			Display:      meta.Display,
-			Key:          col.IsKey == 1,
-			ColumnCNName: col.ColumnCNName,
-			ColumnName:   col.ColumnName,
-		})
-	}
-
-	data := TemplateData{
-		PackageName:       tableInfo.FolderName,
-		StructName:        utils.CamelCase(tableInfo.Table_Name),
-		TableName:         tableInfo.Table_Name,
-		CnName:            tableInfo.CnName,
-		ImportPath:        tableInfo.FolderName,
-		Fields:            fields,
-		DBServer:          tableInfo.DBServer, //如果没有默认等于第一个数据库
-		DetailTable:       tableInfo.DetailName,
-		DetailTableCnName: tableInfo.DetailCnName,
-	}
-	if utils.IsNull(data.DBServer) {
-		data.DBServer = initialize.GetFirstDbConfigName()
+	data := ConvertToTemplateData(tableInfo)
+	if data.TableName == "" || len(data.Fields) == 0 {
+		return TemplateData{}, fmt.Errorf("表信息不完整")
 	}
 
 	projectRoot, err := os.Getwd()
 	if err != nil {
 		return TemplateData{}, err
 	}
-	dirPath := filepath.Join(projectRoot, "model", tableInfo.FolderName)
+	dirPath := filepath.Join(projectRoot, "model", data.PackageName)
 	err = os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
 		return TemplateData{}, err
 	}
-	filePath := filepath.Join(dirPath, data.TableName+".go")
+	filePath := filepath.Join(dirPath, strings.ToLower(data.TableName)+".go")
 	f, err := os.Create(filePath)
 	if err != nil {
 		return TemplateData{}, err
@@ -515,7 +487,7 @@ func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData
 	//exec.Command("gofmt", "-w", filePath).Run()
 
 	//创建扩展类(已存在不覆盖)
-	partialFilePath := filepath.Join(dirPath, "partial", data.TableName+"_entity.go")
+	partialFilePath := filepath.Join(dirPath, "partial", strings.ToLower(data.TableName)+"_entity.go")
 	if _, err := os.Stat(partialFilePath); os.IsNotExist(err) {
 		err = os.MkdirAll(filepath.Join(dirPath, "partial"), os.ModePerm)
 		if err != nil {
@@ -616,7 +588,8 @@ func ConvertToTemplateData(tableInfo system.SysTableInfo) TemplateData {
 
 	fields := make([]Field, 0, len(tableInfo.TableColumns))
 	for _, col := range tableInfo.TableColumns {
-		goFieldName := utils.CamelCase(col.ColumnName)
+		//goFieldName := utils.CamelCase(col.ColumnName)
+		goFieldName := col.ColumnName //和数据库保持一样
 		goType := utils.GoTypeWithNull(col.ColumnType, col.IsNull)
 		meta := generateColumnMeta(col)
 		fields = append(fields, Field{
@@ -634,12 +607,18 @@ func ConvertToTemplateData(tableInfo system.SysTableInfo) TemplateData {
 	}
 
 	data := TemplateData{
-		PackageName: tableInfo.FolderName,
-		StructName:  utils.CamelCase(tableInfo.Table_Name),
-		TableName:   tableInfo.Table_Name,
-		CnName:      tableInfo.CnName,
-		ImportPath:  tableInfo.FolderName,
-		Fields:      fields,
+		PackageName:       strings.ToLower(tableInfo.FolderName),
+		StructName:        utils.CamelCase(tableInfo.Table_Name),
+		TableName:         tableInfo.Table_Name,
+		CnName:            tableInfo.CnName,
+		ImportPath:        tableInfo.FolderName,
+		Fields:            fields,
+		DBServer:          tableInfo.DBServer, //如果没有默认等于第一个数据库
+		DetailTable:       tableInfo.DetailName,
+		DetailTableCnName: tableInfo.DetailCnName,
+	}
+	if utils.IsNull(data.DBServer) {
+		data.DBServer = initialize.GetFirstDbConfigName()
 	}
 	return data
 }

@@ -111,7 +111,7 @@ func GoTypeWithNull(columnType string, isNull int) string {
 			return "*string"
 		}
 		return "string"
-	case "time.Time":
+	case "DateTime":
 		if isNull == 1 {
 			return "*time.Time"
 		}

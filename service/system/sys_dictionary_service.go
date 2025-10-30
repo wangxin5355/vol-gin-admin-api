@@ -10,20 +10,21 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	"github.com/wangxin5355/vol-gin-admin-api/model/system/partial"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 func InitDictionaryService() *DictionaryService {
 	return &DictionaryService{
-		BaseService: base.InitBaseService[system.SysDictionary, system.SysDictionary](string(initialize.DbGin)),
+		BaseService: base.InitBaseService[partial.SysDictionaryEntity, system.SysDictionary](string(initialize.DbGin)),
 	}
 }
 
 type DictionaryService struct {
-	*base.BaseService[system.SysDictionary, system.SysDictionary]
+	*base.BaseService[partial.SysDictionaryEntity, system.SysDictionary]
 }
 
-func (s *DictionaryService) GetPageData(options request.PageDataOptions) *response.PageGridData[system.SysDictionary] {
+func (s *DictionaryService) GetPageData(options request.PageDataOptions) *response.PageGridData[partial.SysDictionaryEntity] {
 	return s.BaseService.GetPageData(options)
 }
 

@@ -1,28 +1,31 @@
 package system
+        
+        
+import (    "time"
+)
 
-import "time"
-
-// SysDictionary 对应数据库表 `sys_dictionary`
+// 字典数据 (Sys_Dictionary)
 type SysDictionary struct {
-	DicID      int        `gorm:"column:Dic_ID;primaryKey;autoIncrement" json:"Dic_ID"`
-	Config     string     `gorm:"column:Config;type:text" json:"Config"`
-	CreateDate *time.Time `gorm:"column:CreateDate" json:"CreateDate"`
-	CreateID   *int       `gorm:"column:CreateID" json:"CreateID"`
-	Creator    *string    `gorm:"column:Creator;size:30" json:"Creator"`
-	DBServer   *string    `gorm:"column:DBServer;type:text" json:"DBServer"`
-	DbSql      *string    `gorm:"column:DbSql;type:text" json:"DbSql"`
-	DicName    string     `gorm:"column:DicName;size:100;not null" json:"DicName"`
-	DicNo      string     `gorm:"column:DicNo;size:100;not null" json:"DicNo"`
-	Enable     int        `gorm:"column:Enable;not null" json:"Enable"`
-	Modifier   *string    `gorm:"column:Modifier;size:30" json:"Modifier"`
-	ModifyDate *time.Time `gorm:"column:ModifyDate" json:"ModifyDate"`
-	ModifyID   *int       `gorm:"column:ModifyID" json:"ModifyID"`
-	OrderNo    *int       `gorm:"column:OrderNo" json:"OrderNo"`
-	ParentId   int        `gorm:"column:ParentId;not null" json:"ParentId"`
-	Remark     *string    `gorm:"column:Remark;type:text" json:"Remark"`
+    //第一项是固定的 写描述信息
+    _ struct{} `entity:"TableCnName=字典数据;TableName=Sys_Dictionary;DetailTable=Sys_DictionaryList;DetailTableCnName=字典明细;DBServer=gin"`
+    ModifyDate *time.Time `json:"ModifyDate" gorm:"column:ModifyDate;comment:修改时间"`
+    Modifier *string `json:"Modifier" gorm:"column:Modifier;comment:修改人"`
+    ModifyID int `json:"ModifyID" gorm:"column:ModifyID"`
+    CreateDate *time.Time `json:"CreateDate" gorm:"column:CreateDate;comment:创建时间"`
+    Creator *string `json:"Creator" gorm:"column:Creator;comment:创建人"`
+    CreateID int `json:"CreateID" gorm:"column:CreateID"`
+    Enable byte `json:"Enable" gorm:"column:Enable;comment:是否启用"`
+    Remark *string `json:"Remark" gorm:"column:Remark;comment:备注"`
+    OrderNo int `json:"OrderNo" gorm:"column:OrderNo;comment:排序号"`
+    DBServer *string `json:"DBServer" gorm:"column:DBServer;comment:DBServer"`
+    DbSql *string `json:"DbSql" gorm:"column:DbSql;comment:sql语句"`
+    Config *string `json:"Config" gorm:"column:Config;comment:配置项"`
+    ParentId int `json:"ParentId" gorm:"column:ParentId;comment:父级ID"`
+    DicName string `json:"DicName" gorm:"column:DicName;comment:字典名称"`
+    DicNo string `json:"DicNo" gorm:"column:DicNo;comment:字典编号"`
+    Dic_ID int `json:"Dic_ID" gorm:"column:Dic_ID;primaryKey;comment:字典ID"`
 }
 
-// TableName 指定表名
 func (SysDictionary) TableName() string {
-	return "sys_dictionary"
+	return "Sys_Dictionary"
 }
