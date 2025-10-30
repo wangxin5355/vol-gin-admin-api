@@ -3,10 +3,6 @@ package middleware
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/wangxin5355/vol-gin-admin-api/global"
-	"github.com/wangxin5355/vol-gin-admin-api/model/system"
-	"github.com/wangxin5355/vol-gin-admin-api/service"
-	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +10,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/wangxin5355/vol-gin-admin-api/global"
+	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

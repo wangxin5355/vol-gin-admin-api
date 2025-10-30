@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/core/base"
@@ -12,7 +13,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system/partial"
-	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 // TestServiceGroup 用于分组 test 相关服务（只声明，不初始化）

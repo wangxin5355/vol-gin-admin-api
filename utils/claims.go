@@ -1,12 +1,13 @@
 package utils
 
 import (
+	"net"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
-	"net"
-	"strings"
 )
 
 func ClearToken(c *gin.Context) {
