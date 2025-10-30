@@ -125,3 +125,31 @@ func GoTypeWithNull(columnType string, isNull int) string {
 func IsNull(str string) bool {
 	return len(strings.TrimSpace(str)) == 0
 }
+
+// SqlInjectCheck sql注入检查
+func SqlInjectCheck(sql string) bool {
+	if IsNull(sql) {
+		return false
+	}
+	lower := strings.ToLower(sql)
+	//禁止分号 多语句或注释
+	if strings.ContainsAny(lower, ";") || strings.Contains(lower, "--") || strings.Contains(lower, "/*") || strings.Contains(lower, "*/") {
+		return false
+	}
+
+	// 必须以 select 或 with (CTE) 开头
+	if !(strings.HasPrefix(lower, "select ") || strings.HasPrefix(lower, "with ")) {
+		return false
+	}
+	banned := []string{
+		"insert ", "update ", "delete ", "drop ", "alter ", "truncate ",
+		"create ", "replace ", "grant ", "revoke ", "exec ", "execute ",
+		"declare ", "set ",
+	}
+	for _, b := range banned {
+		if strings.Contains(lower, b) {
+			return false
+		}
+	}
+	return true
+}

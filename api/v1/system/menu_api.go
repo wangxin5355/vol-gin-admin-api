@@ -1,6 +1,8 @@
 package system
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
@@ -8,7 +10,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/service"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 type MenuApi struct {

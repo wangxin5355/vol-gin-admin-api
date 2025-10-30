@@ -1,12 +1,36 @@
 package system
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/wangxin5355/vol-gin-admin-api/service"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
+	"github.com/wangxin5355/vol-gin-admin-api/service"
+	"github.com/wangxin5355/vol-gin-admin-api/service/system"
+	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 type SysDictionaryApi struct{}
+
+func (b *SysDictionaryApi) SysDictionaryService() *system.DictionaryService {
+	return service.ServiceInstances.DictionaryService
+}
+
+// GetPageData
+// @Tags     SysDictionaryApi
+// @Summary  获取分页数据
+// @Produce  application/json
+// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
+// @Success 200 {object} response.Response{data=[]system.SysDictionary} "返回分页数据"
+// @Router   /api/Sys_Dictionary/GetPageData [post]
+func (b *SysDictionaryApi) GetPageData(c *gin.Context) {
+	param, err := utils.BindJsonToPageDataOptions(c)
+	if err != nil {
+		return
+	}
+	data := b.SysDictionaryService().GetPageData(param)
+	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
+}
 
 // GetBuilderDictionary
 // @Tags     SysDictionaryApi
@@ -14,8 +38,26 @@ type SysDictionaryApi struct{}
 // @Security  ApiKeyAuth
 // @Produce   application/json
 // @Success  200   {object}  []string  "返回所有字典"
-// @Router   /Sys_Dictionary/GetBuilderDictionary [get]
+// @Router   /api/Sys_Dictionary/GetBuilderDictionary [get]
 func (api *SysDictionaryApi) GetBuilderDictionary(c *gin.Context) {
 	dicNos := service.ServiceInstances.DictionaryService.GetBuilderDictionary()
 	c.JSON(http.StatusOK, dicNos)
+}
+
+// GetVueDictionary
+// @Tags     SysDictionaryApi
+// @Summary   获取vue页面需要的字典
+// @Security  ApiKeyAuth
+// @Produce   application/json
+// @Param     dicNos  body    []string  true  "字典编号数组"
+// @Success  200   {object}  []map[string]interface{}  "返回vue字典数据"
+// @Router   /api/Sys_Dictionary/GetVueDictionary [post]
+func (api *SysDictionaryApi) GetVueDictionary(c *gin.Context) {
+	var dicNos []string
+	if err := c.ShouldBindJSON(&dicNos); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	vueDict := service.ServiceInstances.DictionaryService.GetVueDictionar(dicNos)
+	c.JSON(http.StatusOK, vueDict)
 }

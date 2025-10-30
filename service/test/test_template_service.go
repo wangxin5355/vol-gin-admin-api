@@ -10,7 +10,7 @@ import (
 
 func NewTestTemplateService() *TestTemplateService {
 	return &TestTemplateService{
-		BaseService: base.NewBaseService[partial.TestTemplateEntity, test.TestTemplate](string(initialize.DbGin)),
+		BaseService: base.InitBaseService[partial.TestTemplateEntity, test.TestTemplate](string(initialize.DbGin)),
 	}
 }
 

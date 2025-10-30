@@ -35,6 +35,8 @@ import (
 // {{.CnName}} ({{.TableName}})
 type {{.StructName}} struct {
 {{- range .Fields }}
+    //第一项是固定的 写描述信息
+    _ struct{} `entity:"TableCnName={{.CnName}};TableName={{.TableName}};DetailTable={{.DetailTable}};DetailTableCnName={{.DetailTableCnName}};DBServer={{.DBServer}}"`
     {{ .Name }} {{ .Type }} `json:"{{ .JsonName }}" gorm:"column:{{ .ColumnName }}{{if .Key}};primaryKey{{end}}{{if .ColumnCNName}};comment:{{ .ColumnCNName }}{{end}}"`
 {{- end }}
 }

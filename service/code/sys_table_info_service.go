@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
@@ -417,12 +418,15 @@ type Field struct {
 }
 
 type TemplateData struct {
-	PackageName string
-	StructName  string
-	TableName   string
-	CnName      string
-	ImportPath  string
-	Fields      []Field
+	PackageName       string
+	StructName        string
+	TableName         string
+	CnName            string
+	ImportPath        string
+	Fields            []Field
+	DBServer          string // 数据库
+	DetailTable       string // 明细表
+	DetailTableCnName string // 明细表中文名称
 }
 
 // CreateModel 生成model文件
@@ -461,12 +465,18 @@ func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData
 	}
 
 	data := TemplateData{
-		PackageName: tableInfo.FolderName,
-		StructName:  utils.CamelCase(tableInfo.Table_Name),
-		TableName:   tableInfo.Table_Name,
-		CnName:      tableInfo.CnName,
-		ImportPath:  tableInfo.FolderName,
-		Fields:      fields,
+		PackageName:       tableInfo.FolderName,
+		StructName:        utils.CamelCase(tableInfo.Table_Name),
+		TableName:         tableInfo.Table_Name,
+		CnName:            tableInfo.CnName,
+		ImportPath:        tableInfo.FolderName,
+		Fields:            fields,
+		DBServer:          tableInfo.DBServer, //如果没有默认等于第一个数据库
+		DetailTable:       tableInfo.DetailName,
+		DetailTableCnName: tableInfo.DetailCnName,
+	}
+	if utils.IsNull(data.DBServer) {
+		data.DBServer = initialize.GetFirstDbConfigName()
 	}
 
 	projectRoot, err := os.Getwd()

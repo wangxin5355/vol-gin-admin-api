@@ -43,7 +43,7 @@ type BaseService[T, T2 any] struct {
 }
 
 // 构造函数
-func NewBaseService[T, T2 any](dbName string) *BaseService[T, T2] {
+func InitBaseService[T, T2 any](dbName string) *BaseService[T, T2] {
 	db := global.GetGlobalDBByDBName(dbName)
 	if db == nil {
 		panic("数据库连接未初始化或名称错误: " + dbName)

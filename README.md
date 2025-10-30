@@ -26,3 +26,19 @@ server层
 router层
 1、需要生成一个默认router,支持默认api接口，默认router不可修改
 2、需要生成一个用户自定义router,用户可自行添加自定义api路由
+
+
+## 生成完成以后暂时有三个文件需要手动添加
+``` go
+//1.在routergroup.go中添加自定义路由
+system.SysDictionaryRouter
+
+//2.在servicegroup.go中添加
+//ServiceInstance中添加
+DictionaryService *system.DictionaryService
+//在InitServiceInstance中添加
+DictionaryService:      system.InitDictionaryService(),
+
+//3.在server.go中添加
+systemRouter.InitSysDictionaryRouter(PrivateGroup)
+```

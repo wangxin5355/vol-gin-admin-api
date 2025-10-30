@@ -19,21 +19,21 @@ func (b *TestApi) Service() *test.TestService {
 	return service.ServiceInstances.TestService
 }
 
-//// GetPageData
-//// @Tags     TestApi
-//// @Summary  获取分页数据
-//// @Produce  application/json
-//// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
-//// @Success 200 {object} response.Response{data=[]system.SysUser} "返回分页数据"
-//// @Router   /test/GetPageData [post]
-//func (b *TestApi) GetPageData(c *gin.Context) {
-//	param, err := utils.BindJsonToPageDataOptions(c)
-//	if err != nil {
-//		return
-//	}
-//	data := Service().GetPageData(param)
-//	response.OkWithData(data, c)
-//}
+// GetPageData
+// @Tags     TestApi
+// @Summary  获取分页数据
+// @Produce  application/json
+// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
+// @Success 200 {object} response.Response{data=[]system.SysUser} "返回分页数据"
+// @Router   /test/GetPageData [post]
+func (b *TestApi) GetPageData(c *gin.Context) {
+	param, err := utils.BindJsonToPageDataOptions(c)
+	if err != nil {
+		return
+	}
+	data := b.Service().GetPageData(param)
+	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
+}
 
 // Add
 // @Tags     TestApi

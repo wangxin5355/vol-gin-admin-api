@@ -23,13 +23,13 @@ import (
 // Test 服务初始化方法
 // func InitTestServiceGroup() {
 // TestServiceGroup.TestService = &TestService{
-// BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
+// BaseService: base.InitBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
 // }
 // }
 
-func NewTestService() *TestService {
+func InitTestService() *TestService {
 	return &TestService{
-		BaseService: base.NewBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
+		BaseService: base.InitBaseService[partial.TestTemplateEntity, system.TestTemplate](string(initialize.DbGin)),
 	}
 }
 

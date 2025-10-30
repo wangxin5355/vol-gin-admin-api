@@ -66,3 +66,14 @@ type DbTypeEnum string
 const (
 	DbGin DbTypeEnum = "gin"
 )
+
+// GetFirstDbConfigName 获取第一个数据库配置名称
+func GetFirstDbConfigName() string {
+	for _, dbConfig := range global.GVA_CONFIG.DBList {
+		if dbConfig.Disable {
+			continue
+		}
+		return dbConfig.AliasName
+	}
+	return ""
+}

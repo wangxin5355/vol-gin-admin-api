@@ -1,8 +1,9 @@
 package response
 
 import (
-	"github.com/wangxin5355/vol-gin-admin-api/model"
 	"net/http"
+
+	"github.com/wangxin5355/vol-gin-admin-api/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,12 +29,22 @@ func Result(code int, businesscode int, data interface{}, msg string, c *gin.Con
 	})
 }
 
-// 响应内容
+// WebResponseContent 响应内容
 type WebResponseContent struct {
 	Status  bool   `json:"status"`
 	Code    int    `json:"code"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+}
+
+// 分页响应结果
+type WebResponseContentPage struct {
+	Status  bool   `json:"status"`
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Rows    any    `json:"rows"`
+	Total   int    `json:"total"`
+	Summary any    `json:"summary"` // 统计数据
 }
 
 func Ok(msg string, data any) *WebResponseContent {
@@ -65,6 +76,17 @@ func OkWithMessage(message string, c *gin.Context) {
 
 func OkWithData(data interface{}, c *gin.Context) {
 	Result(SUCCESS, model.GeneralSuccess, data, "成功", c)
+}
+
+func OkWithPageData(data any, summary any, total int, c *gin.Context) {
+	c.JSON(http.StatusOK, WebResponseContentPage{
+		Status:  true,
+		Code:    SUCCESS,
+		Message: "操作成功",
+		Rows:    data,
+		Summary: summary,
+		Total:   total,
+	})
 }
 
 func OkWithDetailed(data interface{}, message string, c *gin.Context) {

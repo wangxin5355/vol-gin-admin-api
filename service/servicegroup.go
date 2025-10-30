@@ -2,10 +2,11 @@ package service
 
 import (
 	"fmt"
+	"sync"
+
 	"github.com/wangxin5355/vol-gin-admin-api/service/example"
 	"github.com/wangxin5355/vol-gin-admin-api/service/system"
 	"github.com/wangxin5355/vol-gin-admin-api/service/test"
-	"sync"
 )
 
 // 注意，如果在一个服务中想应用另外一个服务，使用ServiceInstance，会导致循环依赖，
@@ -31,11 +32,10 @@ var (
 )
 
 // 初始化服务层实例
-
 func InitServiceInstance() {
 	once.Do(func() {
 		ServiceInstances = &ServiceInstance{
-			TestService:        test.NewTestService(),         //提供方法
+			TestService:        test.InitTestService(),        //提供方法
 			ExampleTestService: &example.ExampleTestService{}, //直接实例化方式，
 			PermissionService:  system.GetPermissionService(), //返回单例
 			//正常来说全局就一个service就行了。全部直接实例化方式初始化就行
@@ -45,7 +45,7 @@ func InitServiceInstance() {
 			JwtService:             &system.JwtService{},
 			MenuService:            &system.MenuService{},
 			TableInfoService:       &system.TableInfoService{},
-			DictionaryService:      &system.DictionaryService{},
+			DictionaryService:      system.InitDictionaryService(),
 		}
 		fmt.Println("ServiceInstances 单例已初始化")
 	})
