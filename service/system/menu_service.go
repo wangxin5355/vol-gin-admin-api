@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
-	"sync"
-	"time"
 )
 
 type MenuService struct {
@@ -33,10 +34,21 @@ func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int
 		}
 		//转换成TreeMenu,预分配容量，提高性能
 		treeMenus = make([]dto.TreeMenu, 0, len(sys_menus))
+
+		type AuthItem struct {
+			Text  string `json:"text"`
+			Value string `json:"value"`
+		}
+
 		for _, sysMenu := range sys_menus {
-			ps := make([]string, len(sysMenu.Actions))
-			for _, p := range sysMenu.Actions {
-				ps = append(ps, p.Value)
+			var auths []AuthItem
+			if err := json.Unmarshal([]byte(sysMenu.Auth), &auths); err != nil {
+				continue
+			}
+
+			var ps []string
+			for _, a := range auths {
+				ps = append(ps, a.Value)
 			}
 			treeMenus = append(treeMenus, dto.TreeMenu{
 				ID:         sysMenu.Menu_Id,
