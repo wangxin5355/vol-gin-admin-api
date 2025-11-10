@@ -70,3 +70,36 @@ func (api *SysDictionaryApi) GetVueDictionary(c *gin.Context) {
 	vueDict := service.ServiceInstances.DictionaryService.GetVueDictionar(dicNos)
 	c.JSON(http.StatusOK, vueDict)
 }
+
+// Add
+// @Tags     SysDictionaryApi
+// @Summary  新增字典数据
+// @Produce  application/json
+// @Param    sysDictionary  body	  system.SysDictionary  true  "字典数据"
+// @Success 200 {object} response.Response{data=system.SysDictionary} "返回新增的字典数据"
+// @Router   /api/Sys_Dictionary/add [post]
+func (api *SysDictionaryApi) Add(c *gin.Context) {
+	param, err := utils.BindJsonToSaveModel(c)
+	if err != nil {
+		return
+	}
+	data := api.SysDictionaryService().Add(c, param)
+	response.OkWithData(data, c)
+}
+
+// Update
+// @Tags     SysDictionaryApi
+// @Summary  更新字典数据
+// @Produce  application/json
+// @Param    sysDictionary  body	  system.SysDictionary  true  "字典数据"
+// @Success 200 {object} response.Response{data=system.SysDictionary} "返回更新后的字典数据"
+// @Router   /api/Sys_Dictionary/update [post]
+func (api *SysDictionaryApi) Update(c *gin.Context) {
+	param, err := utils.BindJsonToSaveModel(c)
+	if err != nil {
+		return
+	}
+	data := api.SysDictionaryService().Update(c, param)
+	//response.OkWithData(data, c)
+	c.JSON(http.StatusOK, data)
+}

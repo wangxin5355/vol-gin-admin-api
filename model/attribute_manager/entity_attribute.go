@@ -70,6 +70,7 @@ func GetEntityMeta(v interface{}) EntityMeta {
 	} else if v, ok := attrs["Key"]; ok && v != "" {
 		meta.Key = v
 	}
+
 	return meta
 }
 

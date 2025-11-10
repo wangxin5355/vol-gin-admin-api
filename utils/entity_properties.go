@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"gorm.io/gorm"
 )
 
@@ -291,8 +293,36 @@ func setDefaultValueByReflect(v reflect.Value, isAdd bool, userID uint32, userNa
 
 // 给明细表的集合附上默认值 接收detailItem.Addr().Interface()
 func SetDetailDefaultValue(detailItem any, isAdd bool, userID uint32, userName string) {
-	v := reflect.ValueOf(detailItem).Elem()
-	setDefaultValueByReflect(v, isAdd, userID, userName)
+	v := reflect.ValueOf(detailItem)
+
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Struct:
+		setDefaultValueByReflect(v, isAdd, userID, userName)
+	case reflect.Map:
+		setDefaultValueForMap(v, isAdd, userID, userName)
+	default:
+		fmt.Println("不支持的类型:", v.Kind())
+	}
+}
+func setDefaultValueForMap(v reflect.Value, isAdd bool, userID uint32, userName string) {
+	if v.Type().Key().Kind() != reflect.String {
+		fmt.Println("只支持 map[string]interface{} 类型")
+		return
+	}
+
+	if isAdd {
+		v.SetMapIndex(reflect.ValueOf("Creator"), reflect.ValueOf(userName))
+		v.SetMapIndex(reflect.ValueOf("CreateDate"), reflect.ValueOf(time.Now()))
+		v.SetMapIndex(reflect.ValueOf("CreateID"), reflect.ValueOf(userID))
+	} else {
+		v.SetMapIndex(reflect.ValueOf("Modifier"), reflect.ValueOf(userName))
+		v.SetMapIndex(reflect.ValueOf("ModifyDate"), reflect.ValueOf(time.Now()))
+		v.SetMapIndex(reflect.ValueOf("ModifyID"), reflect.ValueOf(userID))
+	}
 }
 
 // 判断字段是否存在（支持嵌套结构体）
@@ -415,8 +445,36 @@ func JsonToEntity[T any](jsonStr string) T {
 // map[string]any 转换为实体
 func MapToEntity[T any](data map[string]any) T {
 	var entity T
-	bytes, _ := json.Marshal(data)
-	json.Unmarshal(bytes, &entity)
+
+	// 遍历 map 中的字段，自动处理类型转换
+	for key, value := range data {
+		switch v := value.(type) {
+		case string:
+			// 如果字段值是字符串，尝试转换为数字（int 或 float64）
+			if intValue, err := strconv.Atoi(v); err == nil {
+				// 如果能转换为 int 类型，替换原值
+				data[key] = intValue
+			} else if floatValue, err := strconv.ParseFloat(v, 64); err == nil {
+				// 如果能转换为 float64 类型，替换原值
+				data[key] = floatValue
+			}
+		}
+	}
+
+	// 将转换后的 map 转换为 JSON 字符串
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		// 处理 marshalling 错误
+		return entity
+	}
+
+	// 反序列化 JSON 数据到实体
+	err = json.Unmarshal(bytes, &entity)
+	if err != nil {
+		// 处理 unmarshalling 错误
+		return entity
+	}
+
 	return entity
 }
 
@@ -428,4 +486,51 @@ func Contains(arr []any, str string) bool {
 		}
 	}
 	return false
+}
+
+var tableEntityMap = map[string]any{
+	"Sys_Dictionary":     &system.SysDictionary{},
+	"Sys_DictionaryList": &system.SysDictionaryList{},
+}
+
+// GetEntityByTableName 根据表名获取实体类型
+func GetEntityByTableName(tableName string) (any, error) {
+	entity, ok := tableEntityMap[tableName]
+	if !ok {
+		return nil, fmt.Errorf("未找到表对应实体: %s", tableName)
+	}
+	t := reflect.TypeOf(entity).Elem()
+	v := reflect.New(t)
+	return v.Interface(), nil
+}
+
+// GetEntityListByTableName 根据表名获取实体类型并将数据转换为对应的实体list
+func GetEntityListByTableName(tableName string, data []map[string]any) ([]any, error) {
+	entity, err := GetEntityByTableName(tableName)
+	if err != nil {
+		return nil, err
+	}
+
+	elemType := reflect.TypeOf(entity).Elem()
+	result := make([]any, 0, len(data))
+
+	for _, m := range data {
+		// 创建一个新的实体指针
+		itemPtr := reflect.New(elemType).Interface()
+
+		// 先把 map 转成 JSON
+		b, err := json.Marshal(m)
+		if err != nil {
+			return nil, fmt.Errorf("map -> json 失败: %v", err)
+		}
+
+		// 再把 JSON 解析到实体
+		if err := json.Unmarshal(b, itemPtr); err != nil {
+			return nil, fmt.Errorf("json -> 实体失败: %v", err)
+		}
+
+		result = append(result, itemPtr)
+	}
+
+	return result, nil
 }

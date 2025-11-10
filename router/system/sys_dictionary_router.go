@@ -16,6 +16,7 @@ func (s *SysDictionaryRouter) InitSysDictionaryRouter(Router *gin.RouterGroup) (
 		baseRouter.POST("GetVueDictionary", sysDictionaryApi.GetVueDictionary)
 		baseRouter.POST("getPageData", sysDictionaryApi.GetPageData)
 		baseRouter.POST("getDetailPage", sysDictionaryApi.GetDetailPage)
+		baseRouter.POST("update", sysDictionaryApi.Update)
 	}
 	return baseRouter
 }

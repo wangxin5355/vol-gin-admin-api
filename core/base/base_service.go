@@ -426,53 +426,101 @@ func updateDetail[T2 any](c *gin.Context,
 	//根据实体信息获取明细的实体
 	var master T2
 	meta := attribute_manager.GetEntityMeta(master)
-	if len(meta.DetailTable) == 0 {
+	if utils.IsNull(meta.DetailTableStr) {
 		return response.Ok("更新成功", entity)
 	}
 
+	tableName := meta.DetailTableStr
 	//把optnios.DetailData的数据转换为实例类
-	var detailData = options.DetailData
-	//定义slicePtr
-	var slicePtr reflect.Value
-	if detailData != nil && len(detailData) > 0 {
-		for i, detailTableMeta := range meta.DetailTable {
-			detailType := detailTableMeta
-			slicePtr = reflect.New(reflect.SliceOf(detailType))
-			if b, err := json.Marshal(detailData[i]); err == nil {
-				_ = json.Unmarshal(b, slicePtr.Interface())
-			}
-		}
-	}
+	var detailData, _ = utils.GetEntityListByTableName(tableName, options.DetailData)
+
 	var userInfo = GetUserInfo(c)
 	utils.SetDefaultValue[T2](entity, false, userInfo.UserID, userInfo.Username)
 	//开启事务保存主表和明细表
 	err := db.Transaction(func(tx *gorm.DB) error {
 		//保存主表,并且拿到主键值赋给明细表
-		if err := tx.Save(&entity).Error; err != nil {
+		if err := tx.Save(entity).Error; err != nil {
 			return err
 		}
 		//获取主键字段及值
 		stmt := &gorm.Statement{DB: db}
-		if err := stmt.Parse(&entity); err != nil {
+		if err := stmt.Parse(entity); err != nil {
 			return err
+		}
+		stmt.ReflectValue = reflect.ValueOf(entity)
+		if stmt.ReflectValue.Kind() == reflect.Ptr {
+			stmt.ReflectValue = stmt.ReflectValue.Elem()
 		}
 		primaryField := stmt.Schema.PrioritizedPrimaryField
 		if primaryField == nil {
-			return fmt.Errorf("未找到主键定义")
+			return fmt.Errorf("更新失败,未找到主键定义")
 		}
 		pkVal := stmt.ReflectValue.FieldByName(primaryField.Name).Interface()
-		//修改明细表
-		if slicePtr.IsValid() && slicePtr.Elem().Len() > 0 {
-			for j := 0; j < slicePtr.Elem().Len(); j++ {
-				detailItem := slicePtr.Elem().Index(j)
-				//给明细表赋值主表的主键值
-				detailItem.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))
-				//明细表赋值默认值
-				utils.SetDetailDefaultValue(detailItem.Addr().Interface(), false, userInfo.UserID, userInfo.Username)
+
+		//删除
+		if len(options.DelKeys) > 0 {
+			//根据明细表的主键key直接删除
+			if err := db.Table(tableName).Delete(options.DelKeys).Error; err != nil {
+				return fmt.Errorf("删除明细数据失败: " + err.Error())
 			}
-			//TODO:明细表赋值默认值问题
-			if err := tx.Save(slicePtr.Elem().Interface()).Error; err != nil {
-				return err
+		}
+
+		// 2. 处理新增和修改
+		for _, detailItem := range detailData {
+			// 判断该记录是新增还是修改
+			reflectVal := reflect.ValueOf(detailItem)
+
+			// 如果是指针类型，获取其元素
+			if reflectVal.Kind() == reflect.Ptr {
+				reflectVal = reflectVal.Elem()
+			}
+
+			//var detailPkVal any
+			//// 如果是 map 类型，使用 MapIndex 获取字段值
+			//if reflectVal.Kind() == reflect.Map {
+			//	// 使用 MapIndex 获取字段
+			//	value := reflectVal.MapIndex(reflect.ValueOf(primaryField.Name)).Interface()
+			//	detailPkVal = value
+			//} else if reflectVal.Kind() == reflect.Struct {
+			//	// 如果是结构体类型，使用 FieldByName 获取字段
+			//	value := reflectVal.FieldByName(primaryField.Name).Interface()
+			//	detailPkVal = value
+			//} else {
+			//	fmt.Println("未知类型:", reflectVal.Kind())
+			//}
+
+			//if detailPkVal == 0 {
+			//	// 新增记录
+			//	reflectVal.FieldByName(primaryField.Name).Set(reflect.ValueOf(pkVal))             // 给主键赋值
+			//	utils.SetDetailDefaultValue(detailItem, true, userInfo.UserID, userInfo.Username) // 默认值设置
+			//	if err := tx.Create(detailItem).Error; err != nil {
+			//		return fmt.Errorf("新增明细数据失败: %v", err)
+			//	}
+			//} else {
+			//	// 修改记录
+			//	utils.SetDetailDefaultValue(detailItem, false, userInfo.UserID, userInfo.Username) // 默认值设置
+			//	if err := tx.Save(detailItem).Error; err != nil {
+			//		return fmt.Errorf("修改明细数据失败: %v", err)
+			//	}
+			//}
+			fieldVal := reflectVal.FieldByName(primaryField.Name)
+			if !fieldVal.IsValid() {
+				return fmt.Errorf("未找到字段: %s", primaryField.Name)
+			}
+			if !fieldVal.CanSet() {
+				return fmt.Errorf("字段不可设置: %s", primaryField.Name)
+			}
+			if fieldVal.Kind() == reflect.Ptr {
+				v := reflect.ValueOf(pkVal)
+				ptr := reflect.New(v.Type())
+				ptr.Elem().Set(v)
+				fieldVal.Set(ptr)
+			} else {
+				fieldVal.Set(reflect.ValueOf(pkVal))
+			}
+			utils.SetDetailDefaultValue(detailItem, false, userInfo.UserID, userInfo.Username) // 默认值设置
+			if err := tx.Save(detailItem).Error; err != nil {
+				return fmt.Errorf("修改明细数据失败: %v", err)
 			}
 		}
 		//提交事务
@@ -481,7 +529,12 @@ func updateDetail[T2 any](c *gin.Context,
 	if err != nil {
 		return response.Error("更新失败: " + err.Error())
 	}
-	return response.Ok("更新成功", entity)
+	//返回data中是  data=主表，list=明细表数据
+	res := map[string]any{
+		"data": entity,
+		"list": detailData,
+	}
+	return response.Ok("更新成功", res)
 }
 
 // del 删除数据

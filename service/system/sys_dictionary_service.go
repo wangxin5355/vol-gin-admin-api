@@ -28,7 +28,7 @@ func (s *DictionaryService) GetPageData(options request.PageDataOptions) *respon
 	return s.BaseService.GetPageData(options)
 }
 
-func (dictionaryService *DictionaryService) GetBuilderDictionary() []string {
+func (s *DictionaryService) GetBuilderDictionary() []string {
 	var dicNos []string
 	result := global.GVA_DB.Raw("SELECT DicNo FROM `sys_dictionary`").Scan(&dicNos)
 	if result.Error != nil {
@@ -39,7 +39,7 @@ func (dictionaryService *DictionaryService) GetBuilderDictionary() []string {
 }
 
 // GetVueDictionar 获取vue页面需要的字典
-func (dictionaryService *DictionaryService) GetVueDictionar(dicNos []string) []map[string]interface{} {
+func (s *DictionaryService) GetVueDictionar(dicNos []string) []map[string]interface{} {
 	if len(dicNos) == 0 {
 		return []map[string]interface{}{}
 	}
