@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
 )
 
@@ -291,7 +291,7 @@ func setDefaultValueByReflect(v reflect.Value, isAdd bool, userID uint32, userNa
 	}
 }
 
-// 给明细表的集合附上默认值 接收detailItem.Addr().Interface()
+// SetDetailDefaultValue 给明细表的集合附上默认值 接收detailItem.Addr().Interface()
 func SetDetailDefaultValue(detailItem any, isAdd bool, userID uint32, userName string) {
 	v := reflect.ValueOf(detailItem)
 
@@ -380,59 +380,71 @@ func IsEmptyValue(v any) bool {
 
 // BuildEntityFields 构造 updateFields，只取匿名结构体的字段
 func BuildEntityFields(entity any, stmt *gorm.Statement) map[string]any {
-	updateFields := make(map[string]any)
+	result := map[string]any{}
 
-	v := reflect.ValueOf(entity)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	t := v.Type()
+	// mapstructure 默认不会递归匿名结构体，需要设置 Squash 标签或者 DecodeHook
+	decoder, _ := mapstructure.NewDecoder(&mapstructure.DecoderConfig{
+		TagName:          "json", // 使用 json tag 作为 key
+		Result:           &result,
+		WeaklyTypedInput: true, // 自动类型转换
+	})
 
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		fieldName := field.Name
-		// 跳过主键字段
-		skip := false
-		for _, pf := range stmt.Schema.PrimaryFields {
-			if strings.EqualFold(fieldName, pf.Name) || strings.EqualFold(fieldName, pf.DBName) {
-				skip = true
-				break
-			}
-		}
-		if skip {
-			continue
-		}
-		// 递归处理匿名结构体
-		if field.Anonymous && field.Type.Kind() == reflect.Struct {
-			anonVal := v.Field(i)
-			anonType := field.Type
-			for j := 0; j < anonType.NumField(); j++ {
-				anonField := anonType.Field(j)
-				anonFieldName := anonField.Name
-				skipAnon := false
-				for _, pf := range stmt.Schema.PrimaryFields {
-					if strings.EqualFold(anonFieldName, pf.Name) || strings.EqualFold(anonFieldName, pf.DBName) {
-						skipAnon = true
-						break
-					}
-				}
-				if skipAnon {
-					continue
-				}
-				anonFieldVal := anonVal.Field(j).Interface()
-				if !IsEmptyValue(anonFieldVal) {
-					updateFields[anonFieldName] = anonFieldVal
-				}
-			}
-			continue
-		}
-		// 普通字段，只加入非零/非空值
-		fieldVal := v.Field(i).Interface()
-		if !IsEmptyValue(fieldVal) {
-			updateFields[fieldName] = fieldVal
-		}
-	}
-	return updateFields
+	_ = decoder.Decode(entity)
+	return result
+
+	//updateFields := make(map[string]any)
+	//
+	//v := reflect.ValueOf(entity)
+	//if v.Kind() == reflect.Ptr {
+	//	v = v.Elem()
+	//}
+	//t := v.Type()
+	//
+	//for i := 0; i < t.NumField(); i++ {
+	//	field := t.Field(i)
+	//	fieldName := field.Name
+	//	// 跳过主键字段
+	//	skip := false
+	//	for _, pf := range stmt.Schema.PrimaryFields {
+	//		if strings.EqualFold(fieldName, pf.Name) || strings.EqualFold(fieldName, pf.DBName) {
+	//			skip = true
+	//			break
+	//		}
+	//	}
+	//	if skip {
+	//		continue
+	//	}
+	//	// 递归处理匿名结构体
+	//	if field.Anonymous && field.Type.Kind() == reflect.Struct {
+	//		anonVal := v.Field(i)
+	//		anonType := field.Type
+	//		for j := 0; j < anonType.NumField(); j++ {
+	//			anonField := anonType.Field(j)
+	//			anonFieldName := anonField.Name
+	//			skipAnon := false
+	//			for _, pf := range stmt.Schema.PrimaryFields {
+	//				if strings.EqualFold(anonFieldName, pf.Name) || strings.EqualFold(anonFieldName, pf.DBName) {
+	//					skipAnon = true
+	//					break
+	//				}
+	//			}
+	//			if skipAnon {
+	//				continue
+	//			}
+	//			anonFieldVal := anonVal.Field(j).Interface()
+	//			if !IsEmptyValue(anonFieldVal) {
+	//				updateFields[anonFieldName] = anonFieldVal
+	//			}
+	//		}
+	//		continue
+	//	}
+	//	// 普通字段，只加入非零/非空值
+	//	fieldVal := v.Field(i).Interface()
+	//	if !IsEmptyValue(fieldVal) {
+	//		updateFields[fieldName] = fieldVal
+	//	}
+	//}
+	//return updateFields
 }
 
 // JsonToEntity json转换为实体
@@ -442,40 +454,102 @@ func JsonToEntity[T any](jsonStr string) T {
 	return entity
 }
 
-// map[string]any 转换为实体
+// MapToEntity 自动将 map[string]any 转为泛型实体 T（支持自动类型转换）
 func MapToEntity[T any](data map[string]any) T {
 	var entity T
+	val := reflect.ValueOf(&entity).Elem() // struct
+	typ := val.Type()
 
-	// 遍历 map 中的字段，自动处理类型转换
-	for key, value := range data {
-		switch v := value.(type) {
-		case string:
-			// 如果字段值是字符串，尝试转换为数字（int 或 float64）
-			if intValue, err := strconv.Atoi(v); err == nil {
-				// 如果能转换为 int 类型，替换原值
-				data[key] = intValue
-			} else if floatValue, err := strconv.ParseFloat(v, 64); err == nil {
-				// 如果能转换为 float64 类型，替换原值
-				data[key] = floatValue
-			}
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		fieldVal := val.Field(i)
+
+		// json tag 优先
+		key := field.Tag.Get("json")
+		if key == "" {
+			key = field.Name
 		}
-	}
 
-	// 将转换后的 map 转换为 JSON 字符串
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		// 处理 marshalling 错误
-		return entity
-	}
+		raw, ok := data[key]
+		if !ok || raw == nil {
+			continue
+		}
 
-	// 反序列化 JSON 数据到实体
-	err = json.Unmarshal(bytes, &entity)
-	if err != nil {
-		// 处理 unmarshalling 错误
-		return entity
+		setFieldValue(fieldVal, raw)
 	}
 
 	return entity
+}
+
+// 将 map 中的 value 设置到字段中（自动类型转换）
+func setFieldValue(field reflect.Value, raw any) {
+	if !field.CanSet() {
+		return
+	}
+
+	// ---- 指针类型处理 ----
+	if field.Kind() == reflect.Pointer {
+		if raw == nil {
+			field.Set(reflect.Zero(field.Type()))
+			return
+		}
+		elem := reflect.New(field.Type().Elem()).Elem()
+		setFieldValue(elem, raw)
+		field.Set(elem.Addr())
+		return
+	}
+
+	// ---- time.Time 特殊处理 ----
+	if field.Type() == reflect.TypeOf(time.Time{}) {
+		switch v := raw.(type) {
+		case string:
+			t, err := time.Parse(time.RFC3339, v)
+			if err == nil {
+				field.Set(reflect.ValueOf(t))
+			}
+		case time.Time:
+			field.Set(reflect.ValueOf(v))
+		}
+		return
+	}
+
+	switch field.Kind() {
+
+	case reflect.String:
+		field.SetString(fmt.Sprintf("%v", raw))
+
+	case reflect.Int, reflect.Int32, reflect.Int64:
+		switch v := raw.(type) {
+		case float64:
+			field.SetInt(int64(v))
+		case string:
+			if i, err := strconv.ParseInt(v, 10, 64); err == nil {
+				field.SetInt(i)
+			}
+		case int, int32, int64:
+			field.SetInt(reflect.ValueOf(v).Int())
+		}
+
+	case reflect.Float32, reflect.Float64:
+		switch v := raw.(type) {
+		case float64:
+			field.SetFloat(v)
+		case string:
+			if f, err := strconv.ParseFloat(v, 64); err == nil {
+				field.SetFloat(f)
+			}
+		}
+
+	case reflect.Bool:
+		switch v := raw.(type) {
+		case bool:
+			field.SetBool(v)
+		case string:
+			if b, err := strconv.ParseBool(v); err == nil {
+				field.SetBool(b)
+			}
+		}
+	}
 }
 
 // Contains 判断字符串数组是否包含某个字符串
@@ -488,49 +562,66 @@ func Contains(arr []any, str string) bool {
 	return false
 }
 
-var tableEntityMap = map[string]any{
-	"Sys_Dictionary":     &system.SysDictionary{},
-	"Sys_DictionaryList": &system.SysDictionaryList{},
-}
-
-// GetEntityByTableName 根据表名获取实体类型
-func GetEntityByTableName(tableName string) (any, error) {
-	entity, ok := tableEntityMap[tableName]
-	if !ok {
-		return nil, fmt.Errorf("未找到表对应实体: %s", tableName)
+// GetPrimaryKey 获取实体的主键字段名及值
+func GetPrimaryKey(db *gorm.DB, entity any) (string, any, error) {
+	if db == nil {
+		return "", nil, fmt.Errorf("db cannot be nil")
 	}
-	t := reflect.TypeOf(entity).Elem()
-	v := reflect.New(t)
-	return v.Interface(), nil
-}
-
-// GetEntityListByTableName 根据表名获取实体类型并将数据转换为对应的实体list
-func GetEntityListByTableName(tableName string, data []map[string]any) ([]any, error) {
-	entity, err := GetEntityByTableName(tableName)
-	if err != nil {
-		return nil, err
+	if entity == nil {
+		return "", nil, fmt.Errorf("entity cannot be nil")
 	}
 
-	elemType := reflect.TypeOf(entity).Elem()
-	result := make([]any, 0, len(data))
+	stmt := &gorm.Statement{DB: db}
+	if err := stmt.Parse(entity); err != nil {
+		return "", nil, fmt.Errorf("parse entity failed: %w", err)
+	}
 
-	for _, m := range data {
-		// 创建一个新的实体指针
-		itemPtr := reflect.New(elemType).Interface()
+	if stmt.Schema.PrioritizedPrimaryField == nil {
+		return "", nil, fmt.Errorf("no primary key defined")
+	}
 
-		// 先把 map 转成 JSON
-		b, err := json.Marshal(m)
-		if err != nil {
-			return nil, fmt.Errorf("map -> json 失败: %v", err)
+	pf := stmt.Schema.PrioritizedPrimaryField
+
+	v := reflect.ValueOf(entity)
+
+	// 处理 interface 包裹
+	for v.Kind() == reflect.Interface {
+		if v.IsNil() {
+			return "", nil, fmt.Errorf("entity is nil interface")
 		}
-
-		// 再把 JSON 解析到实体
-		if err := json.Unmarshal(b, itemPtr); err != nil {
-			return nil, fmt.Errorf("json -> 实体失败: %v", err)
-		}
-
-		result = append(result, itemPtr)
+		v = v.Elem()
 	}
 
-	return result, nil
+	// 处理指针
+	if v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return "", nil, fmt.Errorf("entity is nil pointer")
+		}
+		v = v.Elem()
+	}
+
+	if v.Kind() != reflect.Struct {
+		return "", nil, fmt.Errorf("entity is not struct or pointer to struct")
+	}
+
+	// 尝试通过字段名获取
+	field := v.FieldByName(pf.Name)
+	if !field.IsValid() {
+		// 尝试通过 DBName 获取
+		if f, ok := stmt.Schema.FieldsByDBName[pf.DBName]; ok {
+			field = v.FieldByName(f.Name)
+		}
+	}
+	if !field.IsValid() {
+		return "", nil, fmt.Errorf("primary key field %s not found", pf.Name)
+	}
+
+	var value any
+	if field.Kind() == reflect.Pointer && field.IsNil() {
+		value = nil
+	} else {
+		value = field.Interface()
+	}
+
+	return pf.DBName, value, nil
 }

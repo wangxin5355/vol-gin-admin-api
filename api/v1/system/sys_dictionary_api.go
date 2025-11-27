@@ -12,7 +12,7 @@ import (
 
 type SysDictionaryApi struct{}
 
-func (b *SysDictionaryApi) SysDictionaryService() *system.DictionaryService {
+func (api *SysDictionaryApi) SysDictionaryService() *system.DictionaryService {
 	return service.ServiceInstances.DictionaryService
 }
 
@@ -23,21 +23,21 @@ func (b *SysDictionaryApi) SysDictionaryService() *system.DictionaryService {
 // @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
 // @Success 200 {object} response.Response{data=[]system.SysDictionary} "返回分页数据"
 // @Router   /api/Sys_Dictionary/GetPageData [post]
-func (b *SysDictionaryApi) GetPageData(c *gin.Context) {
+func (api *SysDictionaryApi) GetPageData(c *gin.Context) {
 	param, err := utils.BindJsonToPageDataOptions(c)
 	if err != nil {
 		return
 	}
-	data := b.SysDictionaryService().GetPageData(param)
+	data := api.SysDictionaryService().GetPageData(param)
 	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
 }
 
-func (b *SysDictionaryApi) GetDetailPage(c *gin.Context) {
+func (api *SysDictionaryApi) GetDetailPage(c *gin.Context) {
 	param, err := utils.BindJsonToPageDataOptions(c)
 	if err != nil {
 		return
 	}
-	data := b.SysDictionaryService().GetDetailPage(param)
+	data := api.SysDictionaryService().GetDetailPage(param)
 	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
 }
 
@@ -77,14 +77,15 @@ func (api *SysDictionaryApi) GetVueDictionary(c *gin.Context) {
 // @Produce  application/json
 // @Param    sysDictionary  body	  system.SysDictionary  true  "字典数据"
 // @Success 200 {object} response.Response{data=system.SysDictionary} "返回新增的字典数据"
-// @Router   /api/Sys_Dictionary/add [post]
+// @Router   /api/Sys_Dictionary/Add [post]
 func (api *SysDictionaryApi) Add(c *gin.Context) {
 	param, err := utils.BindJsonToSaveModel(c)
 	if err != nil {
 		return
 	}
 	data := api.SysDictionaryService().Add(c, param)
-	response.OkWithData(data, c)
+	//response.OkWithData(data, c)
+	c.JSON(http.StatusOK, data)
 }
 
 // Update
@@ -101,5 +102,16 @@ func (api *SysDictionaryApi) Update(c *gin.Context) {
 	}
 	data := api.SysDictionaryService().Update(c, param)
 	//response.OkWithData(data, c)
+	c.JSON(http.StatusOK, data)
+}
+
+func (api *SysDictionaryApi) Del(c *gin.Context) {
+	var keys []any
+	err := c.ShouldBindJSON(&keys)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	data := api.SysDictionaryService().Del(c, keys)
 	c.JSON(http.StatusOK, data)
 }
