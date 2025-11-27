@@ -1,8 +1,9 @@
 package system
 
 import (
-	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"time"
+
+	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 )
 
 type SysMenu struct {

@@ -7,10 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
+	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
+	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
+	"gorm.io/gorm"
 )
 
 type MenuService struct {
@@ -23,6 +27,10 @@ const _menuCacheKey = "inernalMenu"
 var _menuVersionn = ""
 var _menus []system.SysMenu
 var allmenuLock sync.Mutex
+
+func SysMenuDB() *gorm.DB {
+	return global.GVA_DB.Model(&system.SysMenu{})
+}
 
 // 获取对应角色的菜单列表
 func (menuService *MenuService) GetMenuActionList(roleIds []string, menuType int) (treeMenus []dto.TreeMenu, err error) {
@@ -148,4 +156,125 @@ func (menuService *MenuService) getAllMenu() (menus []system.SysMenu, err error)
 		_menuVersionn = _cacheVersion
 	}
 	return _menus, nil
+}
+
+// GetMenu 获取所有菜单列表
+func (menuService *MenuService) GetMenu() ([]map[string]any, error) {
+	var menus []system.SysMenu
+	SysMenuDB().Order("OrderNo").Order("ParentId").Find(&menus)
+	var res []map[string]any
+	for _, m := range menus {
+		res = append(res, map[string]any{
+			"id":       m.Menu_Id,
+			"parentId": m.ParentId,
+			"name":     m.MenuName,
+			"icon":     m.Icon,
+			"menuType": m.MenuType,
+			"orderNo":  m.OrderNo,
+		})
+	}
+	return res, nil
+}
+
+// GetTreeItem 编辑菜单时，获取菜单信息
+func (menuService *MenuService) GetTreeItem(menuId int) map[string]any {
+	var res map[string]any
+	err := SysMenuDB().
+		Where("Menu_Id = ?", menuId).
+		Select(`Menu_Id, ParentId, MenuName, Url, Auth, OrderNo, Icon, Enable,
+            COALESCE(MenuType, 0) as MenuType, CreateDate, Creator, TableName, ModifyDate`).
+		Scan(&res).Error
+	if err != nil {
+		return nil
+	}
+	return res
+}
+
+// Save 新建或编辑菜单
+func (menuService *MenuService) Save(menu *system.SysMenu) *response.WebResponseContent {
+	if menu == nil {
+		return response.Error("参数错误")
+	}
+	if menu.Menu_Id > 0 && menu.Menu_Id == menu.ParentId {
+		return response.Error("父ID不能和菜单ID相同")
+	}
+	if utils.IsNull(menu.MenuName) || utils.IsNull(menu.ITableName) {
+		return response.Error("菜单名称和表名称不能为空")
+	}
+	if menu.ITableName != "/" && menu.ITableName != "." {
+		//判断一下是否存在
+		sysMenu := &system.SysMenu{}
+		err := global.GVA_DB.Where("TableName = ?", menu.ITableName).First(sysMenu).Error
+		if err != nil {
+			return response.Error(err.Error())
+		}
+		if sysMenu != nil {
+			if sysMenu.MenuType == menu.MenuType {
+				if (menu.Menu_Id > 0 && sysMenu.Menu_Id != menu.Menu_Id) || (menu.Menu_Id <= 0) {
+					return response.Error("表/视图【" + menu.ITableName + "】名称已被其他菜单使用")
+				}
+			}
+		}
+		changed := false
+		//TODO: 添加和修改需要做默认值 这个默认值需要重新封装一下
+		if menu.Menu_Id <= 0 {
+			//新增
+			err := SysMenuDB().Create(menu).Error
+			if err != nil {
+				return response.Error("新增菜单失败：" + err.Error())
+			}
+		} else {
+			//编辑
+			if menu.Menu_Id == menu.ParentId {
+				return response.Error("父ID不能和菜单ID相同")
+			}
+			if (SysMenuDB().Where("ParentId = ? AND Menu_Id = ?", menu.Menu_Id, menu.ParentId).First(&system.SysMenu{}).RowsAffected > 0) {
+				return response.Error("不能选择此父级id，选择的父级id与当前菜单形成依赖关系")
+			}
+			var auth string
+			changed = SysMenuDB().Where("Menu_Id = ?", menu.Menu_Id).Select("Auth").Scan(&auth).Error == nil && auth != menu.Auth
+			err := SysMenuDB().Where("Menu_Id = ?", menu.Menu_Id).
+				Select("ParentId", "MenuName", "Url", "Auth", "OrderNo",
+					"Icon", "Enable", "MenuType", "TableName",
+					"ModifyDate", "Modifier").
+				Updates(menu).Error
+			if err != nil {
+				return response.Error("修改菜单失败：" + err.Error())
+			}
+		}
+		//TODO:缓存清除
+		global.GVA_REDIS.Set(context.Background(), _menuCacheKey, utils.FormatTimeMillis(time.Now()), 0)
+		if changed == true {
+			//要更新角色的权限缓存
+		}
+	}
+	return response.Ok("操作成功", menu)
+}
+
+// DelMenu 删除菜单
+func (menuService *MenuService) DelMenu(menuId int) *response.WebResponseContent {
+	if menuId <= 0 {
+		return response.Error("参数错误")
+	}
+	//检查是否有子菜单
+	if SysMenuDB().Where("ParentId = ?", menuId).First(&system.SysMenu{}).RowsAffected > 0 {
+		return response.Error("请先删除子菜单")
+	}
+	//删除菜单
+	err := SysMenuDB().Where("Menu_Id = ?", menuId).Delete(&system.SysMenu{}).Error
+	if err != nil {
+		return response.Error("删除失败：" + err.Error())
+	}
+	//更新缓存
+	global.GVA_REDIS.Set(context.Background(), _menuCacheKey, utils.FormatTimeMillis(time.Now()), 0)
+	return response.Ok("删除成功", nil)
+}
+
+func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
+	data := utils.GetUserInfo(c)
+	if data == nil {
+		global.GVA_LOG.Error("从Gin的Context中获取从jwt解析信息失败, 请检查请求头是否存在token")
+		return nil
+	}
+	return data
 }

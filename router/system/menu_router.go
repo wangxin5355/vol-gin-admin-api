@@ -14,6 +14,10 @@ func (s *PermissionRouter) InitMenuRouter(Router *gin.RouterGroup) (R gin.IRoute
 	{
 		baseRouter.GET("getTreeMenu", menuApi.GetTreeMenu)
 		baseRouter.POST("getTreeMenu", menuApi.GetTreeMenu)
+		baseRouter.POST("getMenu", menuApi.GetMenu)
+		baseRouter.POST("getTreeItem", menuApi.GetTreeItem)
+		baseRouter.POST("save", menuApi.Save)
+		baseRouter.POST("delMenu", menuApi.DelMenu)
 	}
 	return baseRouter
 }
