@@ -13,6 +13,7 @@ func (s *SysDictionaryRouter) InitSysDictionaryRouter(Router *gin.RouterGroup) (
 	baseRouter := Router.Group("Sys_Dictionary")
 	{
 		baseRouter.GET("GetBuilderDictionary", sysDictionaryApi.GetBuilderDictionary)
+		baseRouter.POST("GetBuilderDictionary", sysDictionaryApi.GetBuilderDictionary)
 		baseRouter.POST("GetVueDictionary", sysDictionaryApi.GetVueDictionary)
 		baseRouter.POST("getPageData", sysDictionaryApi.GetPageData)
 		baseRouter.POST("getDetailPage", sysDictionaryApi.GetDetailPage)

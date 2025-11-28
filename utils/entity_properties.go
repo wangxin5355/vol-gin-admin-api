@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
 )
@@ -289,6 +290,18 @@ func setDefaultValueByReflect(v reflect.Value, isAdd bool, userID uint32, userNa
 			}
 		}
 	}
+}
+
+// SetEntityDefaultValue 从 gin.Context 中获取用户信息并设置默认值
+func SetEntityDefaultValue(v reflect.Value, c *gin.Context, isAdd bool) {
+	data := GetUserInfo(c)
+	if data == nil {
+		return
+	}
+	userID := data.UserID
+	userName := data.Username
+
+	SetDetailDefaultValue(v.Interface(), isAdd, userID, userName)
 }
 
 // SetDetailDefaultValue 给明细表的集合附上默认值 接收detailItem.Addr().Interface()

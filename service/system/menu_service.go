@@ -12,7 +12,6 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
-	systemReq "github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 	"gorm.io/gorm"
 )
@@ -191,9 +190,11 @@ func (menuService *MenuService) GetTreeItem(menuId int) map[string]any {
 }
 
 // Save 新建或编辑菜单
-func (menuService *MenuService) Save(menu *system.SysMenu) *response.WebResponseContent {
-	if menu == nil {
-		return response.Error("参数错误")
+func (menuService *MenuService) Save(c *gin.Context) *response.WebResponseContent {
+	var menu system.SysMenu
+	err := c.ShouldBindJSON(&menu)
+	if err != nil {
+		return response.Error("参数错误" + err.Error())
 	}
 	if menu.Menu_Id > 0 && menu.Menu_Id == menu.ParentId {
 		return response.Error("父ID不能和菜单ID相同")
@@ -242,8 +243,8 @@ func (menuService *MenuService) Save(menu *system.SysMenu) *response.WebResponse
 				return response.Error("修改菜单失败：" + err.Error())
 			}
 		}
-		//TODO:缓存清除
 		global.GVA_REDIS.Set(context.Background(), _menuCacheKey, utils.FormatTimeMillis(time.Now()), 0)
+		//TODO: 如果权限有变化，则需要更新角色的权限缓存
 		if changed == true {
 			//要更新角色的权限缓存
 		}
@@ -268,13 +269,4 @@ func (menuService *MenuService) DelMenu(menuId int) *response.WebResponseContent
 	//更新缓存
 	global.GVA_REDIS.Set(context.Background(), _menuCacheKey, utils.FormatTimeMillis(time.Now()), 0)
 	return response.Ok("删除成功", nil)
-}
-
-func GetUserInfo(c *gin.Context) *systemReq.CustomClaims {
-	data := utils.GetUserInfo(c)
-	if data == nil {
-		global.GVA_LOG.Error("从Gin的Context中获取从jwt解析信息失败, 请检查请求头是否存在token")
-		return nil
-	}
-	return data
 }

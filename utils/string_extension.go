@@ -121,9 +121,19 @@ func GoTypeWithNull(columnType string, isNull int) string {
 	}
 }
 
-// 检查字符串是否为空或空白字符
+// IsNull 检查字符串是否为空或空白字符
 func IsNull(str string) bool {
 	return len(strings.TrimSpace(str)) == 0
+}
+
+// IsNulls 检查多个字符串是否有任意一个为空或空白字符
+func IsNulls(strs ...string) bool {
+	for _, str := range strs {
+		if len(strings.TrimSpace(str)) == 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // SqlInjectCheck sql注入检查

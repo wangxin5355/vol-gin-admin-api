@@ -1,0 +1,21 @@
+package {{.PackageName}}
+
+import (
+	"github.com/gin-gonic/gin"
+	api "github.com/wangxin5355/vol-gin-admin-api/api/v1"
+)
+
+type {{.StructName}}Router struct{}
+
+var {{.PackageName}}Api = api.ApiGroupApp.{{.StructName}}ApiGroup.{{.StructName}}Api
+
+func (s *{{.StructName}}Router) Init{{.StructName}}Router(Router *gin.RouterGroup) (R gin.IRoutes) {
+	baseRouter := Router.Group("{{.PackageName}}")
+	{
+		baseRouter.POST("GetPageData", {{.PackageName}}Api.GetPageData)
+		baseRouter.POST("Add", {{.PackageName}}Api.Add)
+		baseRouter.POST("Update", {{.PackageName}}Api.Update)
+		baseRouter.POST("Del", {{.PackageName}}Api.Del)
+	}
+	return baseRouter
+}

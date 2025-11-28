@@ -7,7 +7,7 @@ type LoadTableInfoReq struct {
 	ColumnCNName string `json:"columnCNName"`
 	NameSpace    string `json:"nameSpace"`
 	FolderName   string `json:"folderName"`
-	TableId      int    `json:"tableId"`
+	TableId      int    `json:"table_Id"`
 	IsTreeLoad   bool   `json:"isTreeLoad"`
 	DBServer     string `json:"dbServer"`
 }

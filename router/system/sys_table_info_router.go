@@ -13,7 +13,7 @@ func (s *SysTableInfoRouter) InitSysTableInfoRouter(Router *gin.RouterGroup) (R 
 	baseRouter := Router.Group("builder")
 	{
 		baseRouter.GET("getTableTree", sysTableInfoApi.GetTableTree)
-		baseRouter.POST("loadTableInfo", sysTableInfoApi.LoadTableInfo)
+		baseRouter.POST("LoadTableInfo", sysTableInfoApi.LoadTableInfo)
 		baseRouter.POST("createModel", sysTableInfoApi.CreateModel)
 		baseRouter.POST("createServices", sysTableInfoApi.CreateServices)
 	}

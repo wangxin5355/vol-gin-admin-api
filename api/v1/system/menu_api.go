@@ -94,13 +94,7 @@ func (api *MenuApi) GetTreeItem(c *gin.Context) {
 // @Success  200   {object}  response.Response{data=string}  "新建或编辑菜单"
 // @Router   /menu/Save [post]
 func (api *MenuApi) Save(c *gin.Context) {
-	var menu system.SysMenu
-	err := c.ShouldBindJSON(&menu)
-	if err != nil {
-		response.FailWithMessage("参数错误"+err.Error(), c)
-		return
-	}
-	res := service.ServiceInstances.MenuService.Save(&menu)
+	res := service.ServiceInstances.MenuService.Save(c)
 	c.JSON(http.StatusOK, res)
 }
 

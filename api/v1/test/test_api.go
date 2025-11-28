@@ -84,7 +84,6 @@ func (b *TestApi) Del(c *gin.Context) {
 	}
 	data := b.Service().Del(c, keys)
 	response.OkWithData(data, c)
-
 }
 
 // GetCurrentUserInfo

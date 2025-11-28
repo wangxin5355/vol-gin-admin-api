@@ -13,6 +13,7 @@ func (s *BuilderRouter) InitBuilderRouter(Router *gin.RouterGroup) (R gin.IRoute
 	baseRouter := Router.Group("builder")
 	{
 		baseRouter.GET("GetTableTree", builderApi.GetTableTree)
+		baseRouter.POST("GetTableTree", builderApi.GetTableTree)
 	}
 	return baseRouter
 }

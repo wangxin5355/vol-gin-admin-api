@@ -15,5 +15,70 @@ func Service() *{{.StructName}}Service {
     return service.ServiceGroupApp.{{.PackageName}}Service
 }
 
-func (a *{{.StructName}}Api) GetPageData(c *gin.Context) {
+
+// GetPageData
+// @Tags     {{.PackageName}}Api
+// @Summary  获取分页数据
+// @Produce  application/json
+// @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
+// @Success 200 {object} response.Response{data=[]{{.PackageName}}.{{.StructName}}} "返回分页数据"
+// @Router   /test/GetPageData [post]
+func (api *{{.PackageName}}Api) GetPageData(c *gin.Context) {
+	param, err := utils.BindJsonToPageDataOptions(c)
+	if err != nil {
+		return
+	}
+	data := api.Service().GetPageData(param)
+	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
+}
+
+// Add
+// @Tags     {{.PackageName}}Api
+// @Summary  添加数据
+// @Produce  application/json
+// @Param    saveModel  body	  request.SaveModel  true  "添加数据"
+// @Success 200 {object} response.Response{data=string} "添加数据"
+// @Router   /test/Add [post]
+func (api *{{.PackageName}}Api) Add(c *gin.Context) {
+	param, err := utils.BindJsonToSaveModel(c)
+	if err != nil {
+		return
+	}
+	data := api.Service().Add(c, param)
+	response.OkWithData(data, c)
+}
+
+// Update
+// @Tags     {{.PackageName}}Api
+// @Summary  更新数据
+// @Produce  application/json
+// @Param    saveModel  body	  request.SaveModel  true  "更新数据"
+// @Success 200 {object} response.Response{data=string} "更新数据"
+// @Router   /test/Update [post]
+func (api *{{.PackageName}}Api) Update(c *gin.Context) {
+	param, err := utils.BindJsonToSaveModel(c)
+	if err != nil {
+		return
+	}
+	data := api.Service().Update(c, param)
+	response.OkWithData(data, c)
+
+}
+
+// Del
+// @Tags     {{.PackageName}}Api
+// @Summary  删除数据
+// @Produce  application/json
+// @Param    keys  body	  []any  true  "删除数据"
+// @Success 200 {object} response.Response{data=string} "删除数据"
+// @Router   /test/Del [post]
+func (api *{{.PackageName}}Api) Del(c *gin.Context) {
+	var keys []any
+	err := c.ShouldBindJSON(&keys)
+	if err != nil {
+		response.FailWithMessage(err.Error(), c)
+		return
+	}
+	data := api.Service().Del(c, keys)
+	response.OkWithData(data, c)
 }

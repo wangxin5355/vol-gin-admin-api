@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -80,6 +81,9 @@ func (s *SysTableInfoService) LoadTableInfo(c *gin.Context) *response.WebRespons
 	if err := c.ShouldBindJSON(&req); err != nil {
 		return response.Error("操作失败")
 	}
+	//table_Id和isTreeLoad从url参数传递过来
+	req.TableId, _ = strconv.Atoi(c.Query("table_Id"))
+	req.IsTreeLoad, _ = strconv.ParseBool(c.Query("isTreeLoad"))
 	// tableId初始化
 	if req.TableId <= 0 {
 		req.TableId = InitTable(req.ParentId, req.TableName, req.ColumnCNName, req.NameSpace, req.FolderName, req.TableId, req.IsTreeLoad, req.DBServer)
@@ -431,7 +435,7 @@ type TemplateData struct {
 	Key               string // 主键
 }
 
-// CreateModel 生成model文件
+// CreateModel 生成model文件 每次都覆盖，partial文件不覆盖
 func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData, error) {
 	tableId := req.TableId
 	// 获取表信息
@@ -538,7 +542,7 @@ func generateColumnMeta(col system.SysTableColumn) columnMeta {
 	}
 }
 
-// CreateServices 创建服务
+// CreateServices 创建服务 每次都不覆盖 重复生成没有意义，只生成一次 有重大变动就删掉重新生成或手动修改
 func (s *SysTableInfoService) CreateServices(req system.SysTableInfo) (TemplateData, error) {
 	tableId := req.TableId
 	// 获取表信息
@@ -547,7 +551,7 @@ func (s *SysTableInfoService) CreateServices(req system.SysTableInfo) (TemplateD
 		return TemplateData{}, err
 	}
 	//检查命名空间和项目文件夹不能为空
-	if utils.IsNull(tableInfo.Namespace) || utils.IsNull(tableInfo.FolderName) {
+	if utils.IsNulls(tableInfo.Namespace, tableInfo.FolderName) {
 		return TemplateData{}, fmt.Errorf("命名空间和项目文件夹不能为空")
 	}
 	data := ConvertToTemplateData(tableInfo)
@@ -560,8 +564,16 @@ func (s *SysTableInfoService) CreateServices(req system.SysTableInfo) (TemplateD
 		return TemplateData{}, err
 	}
 
-	//创建 api、router
-	//TODO:api、router好处理，但是需要考虑服务注册还没考虑好
+	//创建 api、router文件，存在就不覆盖
+	//TODO:api、router好处理，但是需要考虑服务注册还没考虑好, routergroup.go,   servicegroup.go,   server.go 需要手动添加
+	err = CreateApiFile(data)
+	if err != nil {
+		return TemplateData{}, err
+	}
+	err = CreateRouterFile(data)
+	if err != nil {
+		return TemplateData{}, err
+	}
 	return data, nil
 }
 
@@ -633,16 +645,51 @@ func ConvertToTemplateData(tableInfo system.SysTableInfo) TemplateData {
 
 // CreateServiceFile 创建Service文件
 func CreateServiceFile(data TemplateData) error {
+	err := CreateFileIfNotExist("service", data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateRouterFile 创建router文件
+func CreateRouterFile(data TemplateData) error {
+	err := CreateFileIfNotExist("router", data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateApiFile 创建api文件
+func CreateApiFile(data TemplateData) error {
+	err := CreateFileIfNotExist("api", data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreateFileIfNotExist 创建文件已存在就不覆盖
+func CreateFileIfNotExist(fileType string, data TemplateData) error {
+	types := map[string]bool{
+		"service": true,
+		"router":  true,
+		"api":     true,
+	}
+	if !types[fileType] {
+		return fmt.Errorf("不支持的文件类型: %s", fileType)
+	}
 	projectRoot, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	dirPath := filepath.Join(projectRoot, "service", data.PackageName)
+	dirPath := filepath.Join(projectRoot, fileType, data.PackageName)
 	err = os.MkdirAll(dirPath, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	filePath := filepath.Join(dirPath, data.TableName+"_service.go")
+	filePath := filepath.Join(dirPath, data.TableName+"_"+fileType+".go")
 	if _, err := os.Stat(filePath); err == nil {
 		//文件已存在不覆盖
 		return nil
@@ -662,7 +709,7 @@ func CreateServiceFile(data TemplateData) error {
 	if err != nil {
 		return err
 	}
-	tmplPath := filepath.Join(projectRoot, "tmpl", "service.tmpl")
+	tmplPath := filepath.Join(projectRoot, "tmpl", fileType+".tmpl")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		return err
@@ -674,7 +721,3 @@ func CreateServiceFile(data TemplateData) error {
 	}
 	return nil
 }
-
-// 创建router文件
-
-// 创建api文件
