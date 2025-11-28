@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/wangxin5355/vol-gin-admin-api/service/code"
 	"github.com/wangxin5355/vol-gin-admin-api/service/example"
 	"github.com/wangxin5355/vol-gin-admin-api/service/system"
 	"github.com/wangxin5355/vol-gin-admin-api/service/test"
@@ -22,8 +23,9 @@ type ServiceInstance struct {
 	MenuService            *system.MenuService
 	PermissionService      *system.PermissionService //依赖实现
 	//PermissionService system.IPermissions //依赖接口，两种方式都可以,如果是大型项目，建议使用接口依赖
-	TableInfoService  *system.TableInfoService
-	DictionaryService *system.DictionaryService
+	SysTableInfoService *code.SysTableInfoService
+	DictionaryService   *system.DictionaryService
+	SysLogService       *system.SysLogService
 }
 
 var (
@@ -44,8 +46,9 @@ func InitServiceInstance() {
 			SystemConfigService:    &system.SystemConfigService{},
 			JwtService:             &system.JwtService{},
 			MenuService:            &system.MenuService{},
-			TableInfoService:       &system.TableInfoService{},
+			SysTableInfoService:    &code.SysTableInfoService{},
 			DictionaryService:      system.InitDictionaryService(),
+			SysLogService:          system.InitSysLogService(),
 		}
 		fmt.Println("ServiceInstances 单例已初始化")
 	})

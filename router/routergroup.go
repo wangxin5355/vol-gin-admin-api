@@ -21,6 +21,7 @@ type SystemRouterGroup struct {
 	system.SysTableInfoRouter
 	system.BuilderRouter
 	system.SysDictionaryRouter
+	system.SysLogRouter
 }
 
 var RouterGroupApp = new(RouterGroup)

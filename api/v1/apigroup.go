@@ -21,6 +21,7 @@ type SystemApiGroup struct {
 	system.SysTableInfoApi
 	system.BuilderApi
 	system.SysDictionaryApi
+	system.SysLogApi
 }
 
 var ApiGroupApp = new(ApiGroup)

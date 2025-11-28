@@ -1,84 +1,84 @@
-package {{.PackageName}}
+package system
 
 import (
     "github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/service"
-	"github.com/wangxin5355/vol-gin-admin-api/service/{{.PackageName}}"
+	"github.com/wangxin5355/vol-gin-admin-api/service/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
 
-type {{.StructName}}Api struct {}
+type SysLogApi struct {}
 
-func (api *{{.StructName}}Api) {{.StructName}}Service() *system.{{.StructName}}Service {
-	return service.ServiceInstances.{{.StructName}}Service
+func (api *SysLogApi) SysLogService() *system.SysLogService {
+	return service.ServiceInstances.SysLogService
 }
 
 
 // GetPageData
-// @Tags     {{.StructName}}Api
+// @Tags     SysLogApi
 // @Summary  获取分页数据
 // @Produce  application/json
 // @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
-// @Success 200 {object} response.Response{data=[]{{.PackageName}}.{{.StructName}}} "返回分页数据"
+// @Success 200 {object} response.Response{data=[]system.SysLog} "返回分页数据"
 // @Router   /test/GetPageData [post]
-func (api *{{.StructName}}Api) GetPageData(c *gin.Context) {
+func (api *SysLogApi) GetPageData(c *gin.Context) {
 	param, err := utils.BindJsonToPageDataOptions(c)
 	if err != nil {
 		return
 	}
-	data := api.{{.StructName}}Service().GetPageData(param)
+	data := api.SysLogService().GetPageData(param)
 	response.OkWithPageData(data.Rows, data.Summary, data.Total, c)
 }
 
 // Add
-// @Tags     {{.StructName}}Api
+// @Tags     SysLogApi
 // @Summary  添加数据
 // @Produce  application/json
 // @Param    saveModel  body	  request.SaveModel  true  "添加数据"
 // @Success 200 {object} response.Response{data=string} "添加数据"
 // @Router   /test/Add [post]
-func (api *{{.StructName}}Api) Add(c *gin.Context) {
+func (api *SysLogApi) Add(c *gin.Context) {
 	param, err := utils.BindJsonToSaveModel(c)
 	if err != nil {
 		return
 	}
-	data := api.{{.StructName}}Service().Add(c, param)
+	data := api.SysLogService().Add(c, param)
 	response.OkWithData(data, c)
 }
 
 // Update
-// @Tags     {{.StructName}}Api
+// @Tags     SysLogApi
 // @Summary  更新数据
 // @Produce  application/json
 // @Param    saveModel  body	  request.SaveModel  true  "更新数据"
 // @Success 200 {object} response.Response{data=string} "更新数据"
 // @Router   /test/Update [post]
-func (api *{{.StructName}}Api) Update(c *gin.Context) {
+func (api *SysLogApi) Update(c *gin.Context) {
 	param, err := utils.BindJsonToSaveModel(c)
 	if err != nil {
 		return
 	}
-	data := api.{{.StructName}}Service().Update(c, param)
+	data := api.SysLogService().Update(c, param)
 	response.OkWithData(data, c)
 
 }
 
 // Del
-// @Tags     {{.StructName}}Api
+// @Tags     SysLogApi
 // @Summary  删除数据
 // @Produce  application/json
 // @Param    keys  body	  []any  true  "删除数据"
 // @Success 200 {object} response.Response{data=string} "删除数据"
 // @Router   /test/Del [post]
-func (api *{{.StructName}}Api) Del(c *gin.Context) {
+func (api *SysLogApi) Del(c *gin.Context) {
 	var keys []any
 	err := c.ShouldBindJSON(&keys)
 	if err != nil {
 		response.FailWithMessage(err.Error(), c)
 		return
 	}
-	data := api.{{.StructName}}Service().Del(c, keys)
+	data := api.SysLogService().Del(c, keys)
 	response.OkWithData(data, c)
 }

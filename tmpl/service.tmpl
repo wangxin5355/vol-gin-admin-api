@@ -1,17 +1,15 @@
 package {{.PackageName}}
 
 import (
-	"context"
-
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 
 	"github.com/wangxin5355/vol-gin-admin-api/core/base"
 	"github.com/wangxin5355/vol-gin-admin-api/model/{{.PackageName}}"
 	"github.com/wangxin5355/vol-gin-admin-api/model/{{.PackageName}}/partial"
 )
-func New{{.StructName}}Service() *{{.StructName}}Service {
+func Init{{.StructName}}Service() *{{.StructName}}Service {
 	return &{{.StructName}}Service{
-		BaseService: base.NewBaseService[partial.{{.StructName}}Entity, {{.PackageName}}.{{.StructName}}](string(initialize.DbGin)),
+		BaseService: base.InitBaseService[partial.{{.StructName}}Entity, {{.PackageName}}.{{.StructName}}](string(initialize.DbGin)),
 	}
 }
 

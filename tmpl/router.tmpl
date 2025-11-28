@@ -7,15 +7,15 @@ import (
 
 type {{.StructName}}Router struct{}
 
-var {{.PackageName}}Api = api.ApiGroupApp.{{.StructName}}ApiGroup.{{.StructName}}Api
+var {{.StructName}}Api = api.ApiGroupApp.{{.StructName}}ApiGroup.{{.StructName}}Api
 
 func (s *{{.StructName}}Router) Init{{.StructName}}Router(Router *gin.RouterGroup) (R gin.IRoutes) {
-	baseRouter := Router.Group("{{.PackageName}}")
+	baseRouter := Router.Group("{{.TableName}}")
 	{
-		baseRouter.POST("GetPageData", {{.PackageName}}Api.GetPageData)
-		baseRouter.POST("Add", {{.PackageName}}Api.Add)
-		baseRouter.POST("Update", {{.PackageName}}Api.Update)
-		baseRouter.POST("Del", {{.PackageName}}Api.Del)
+		baseRouter.POST("GetPageData", {{.StructName}}Api.GetPageData)
+		baseRouter.POST("Add", {{.StructName}}Api.Add)
+		baseRouter.POST("Update", {{.StructName}}Api.Update)
+		baseRouter.POST("Del", {{.StructName}}Api.Del)
 	}
 	return baseRouter
 }

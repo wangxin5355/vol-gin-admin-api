@@ -83,6 +83,7 @@ func initRouters() *gin.Engine {
 		systemRouter.InitMenuRouter(PrivateGroup) //需要鉴权
 		systemRouter.InitBuilderRouter(PrivateGroup)
 		systemRouter.InitSysDictionaryRouter(PrivateGroup)
+		systemRouter.InitSysLogRouter(PrivateGroup)
 
 	}
 

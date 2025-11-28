@@ -14,6 +14,9 @@ func (s *BuilderRouter) InitBuilderRouter(Router *gin.RouterGroup) (R gin.IRoute
 	{
 		baseRouter.GET("GetTableTree", builderApi.GetTableTree)
 		baseRouter.POST("GetTableTree", builderApi.GetTableTree)
+		//baseRouter.POST("Save", builderApi.Save)
+		baseRouter.POST("CreateModel", builderApi.CreateModel)
+		baseRouter.POST("CreateServices", builderApi.CreateServices)
 	}
 	return baseRouter
 }

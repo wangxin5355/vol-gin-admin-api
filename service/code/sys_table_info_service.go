@@ -12,6 +12,7 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/core/initialize"
 	"github.com/wangxin5355/vol-gin-admin-api/global"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
+	"github.com/wangxin5355/vol-gin-admin-api/model/dto"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system"
 	"github.com/wangxin5355/vol-gin-admin-api/model/system/request"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
@@ -436,7 +437,11 @@ type TemplateData struct {
 }
 
 // CreateModel 生成model文件 每次都覆盖，partial文件不覆盖
-func (s *SysTableInfoService) CreateModel(req system.SysTableInfo) (TemplateData, error) {
+func (s *SysTableInfoService) CreateModel(c *gin.Context) (TemplateData, error) {
+	var req system.SysTableInfo
+	if err := c.ShouldBindJSON(&req); err != nil {
+		return TemplateData{}, err
+	}
 	tableId := req.TableId
 	// 获取表信息
 	var tableInfo system.SysTableInfo
@@ -565,7 +570,7 @@ func (s *SysTableInfoService) CreateServices(req system.SysTableInfo) (TemplateD
 	}
 
 	//创建 api、router文件，存在就不覆盖
-	//TODO:api、router好处理，但是需要考虑服务注册还没考虑好, routergroup.go,   servicegroup.go,   server.go 需要手动添加
+	//TODO:api、router好处理，但是需要考虑服务注册还没考虑好, routergroup.go,   servicegroup.go,   server.go,   routergroup.go 需要手动添加
 	err = CreateApiFile(data)
 	if err != nil {
 		return TemplateData{}, err
@@ -689,7 +694,7 @@ func CreateFileIfNotExist(fileType string, data TemplateData) error {
 	if err != nil {
 		return err
 	}
-	filePath := filepath.Join(dirPath, data.TableName+"_"+fileType+".go")
+	filePath := filepath.Join(dirPath, strings.ToLower(data.TableName+"_"+fileType+".go"))
 	if _, err := os.Stat(filePath); err == nil {
 		//文件已存在不覆盖
 		return nil
@@ -720,4 +725,43 @@ func CreateFileIfNotExist(fileType string, data TemplateData) error {
 		return err
 	}
 	return nil
+}
+
+//// 获取生成配置的树开菜单
+//func (tableInfoService *SysTableInfoService) GetTableTree() (string, string) {
+//	var tableInfos []dto.TableInfo
+//	result := global.GVA_DB.Raw("SELECT Table_Id as Id,ParentId as PId,ParentId ,ColumnCNName as Name,OrderNo  FROM `sys_tableinfo` ORDER BY OrderNo").Scan(&tableInfos)
+//	if result.Error != nil {
+//		log.Fatal(result.Error)
+//		return "[]", "''"
+//	}
+//	var tableTreeList = getTableTreeList(tableInfos)
+//	data, err := json.Marshal(tableTreeList)
+//	if err != nil {
+//		panic(err)
+//	}
+//	return string(data), "" //go版本不返回命名空间。
+//}
+
+// 获取tableTreeListdatas
+func getTableTreeList(tables []dto.TableInfo) []dto.TableTreeListData {
+	pids := make(map[int]struct{})
+	for _, table := range tables {
+		pids[table.PId] = struct{}{}
+	}
+	tableTreeListdatas := make([]dto.TableTreeListData, 0)
+	for _, table := range tables {
+		isParent := false
+		if _, exists := pids[table.Id]; exists {
+			isParent = true
+		}
+		tableTreeListdatas = append(tableTreeListdatas, dto.TableTreeListData{
+			Id:       table.Id,
+			PId:      table.PId,
+			ParentId: table.ParentId,
+			Name:     table.Name,
+			IsParent: isParent,
+		})
+	}
+	return tableTreeListdatas
 }
