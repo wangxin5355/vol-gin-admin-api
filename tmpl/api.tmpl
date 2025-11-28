@@ -8,21 +8,19 @@ import (
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
-
 type {{.StructName}}Api struct {}
 
 func (api *{{.StructName}}Api) {{.StructName}}Service() *system.{{.StructName}}Service {
 	return service.ServiceInstances.{{.StructName}}Service
 }
 
-
 // GetPageData
 // @Tags     {{.StructName}}Api
 // @Summary  获取分页数据
 // @Produce  application/json
 // @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
-// @Success 200 {object} response.Response{data=[]{{.PackageName}}.{{.StructName}}} "返回分页数据"
-// @Router   /test/GetPageData [post]
+// @Success 200 {object} response.Response{data=[]{{.PackageName}}.{{.TableName}}} "返回分页数据"
+// @Router   /{{.TableName}}/GetPageData [post]
 func (api *{{.StructName}}Api) GetPageData(c *gin.Context) {
 	param, err := utils.BindJsonToPageDataOptions(c)
 	if err != nil {
@@ -38,7 +36,7 @@ func (api *{{.StructName}}Api) GetPageData(c *gin.Context) {
 // @Produce  application/json
 // @Param    saveModel  body	  request.SaveModel  true  "添加数据"
 // @Success 200 {object} response.Response{data=string} "添加数据"
-// @Router   /test/Add [post]
+// @Router   /{{.TableName}}/Add [post]
 func (api *{{.StructName}}Api) Add(c *gin.Context) {
 	param, err := utils.BindJsonToSaveModel(c)
 	if err != nil {
@@ -54,7 +52,7 @@ func (api *{{.StructName}}Api) Add(c *gin.Context) {
 // @Produce  application/json
 // @Param    saveModel  body	  request.SaveModel  true  "更新数据"
 // @Success 200 {object} response.Response{data=string} "更新数据"
-// @Router   /test/Update [post]
+// @Router   /{{.TableName}}/Update [post]
 func (api *{{.StructName}}Api) Update(c *gin.Context) {
 	param, err := utils.BindJsonToSaveModel(c)
 	if err != nil {
@@ -71,7 +69,7 @@ func (api *{{.StructName}}Api) Update(c *gin.Context) {
 // @Produce  application/json
 // @Param    keys  body	  []any  true  "删除数据"
 // @Success 200 {object} response.Response{data=string} "删除数据"
-// @Router   /test/Del [post]
+// @Router   /{{.TableName}}/Del [post]
 func (api *{{.StructName}}Api) Del(c *gin.Context) {
 	var keys []any
 	err := c.ShouldBindJSON(&keys)

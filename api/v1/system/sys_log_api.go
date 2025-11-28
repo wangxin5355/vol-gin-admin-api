@@ -1,27 +1,25 @@
 package system
 
 import (
-    "github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin"
 	"github.com/wangxin5355/vol-gin-admin-api/model/common/response"
 	"github.com/wangxin5355/vol-gin-admin-api/service"
 	"github.com/wangxin5355/vol-gin-admin-api/service/system"
 	"github.com/wangxin5355/vol-gin-admin-api/utils"
 )
 
-
-type SysLogApi struct {}
+type SysLogApi struct{}
 
 func (api *SysLogApi) SysLogService() *system.SysLogService {
 	return service.ServiceInstances.SysLogService
 }
-
 
 // GetPageData
 // @Tags     SysLogApi
 // @Summary  获取分页数据
 // @Produce  application/json
 // @Param    options  body	  request.PageDataOptions  true  "分页数据选项"
-// @Success 200 {object} response.Response{data=[]system.SysLog} "返回分页数据"
+// @Success 200 {object} response.Response{data=[]system.Sys_Log} "返回分页数据"
 // @Router   /test/GetPageData [post]
 func (api *SysLogApi) GetPageData(c *gin.Context) {
 	param, err := utils.BindJsonToPageDataOptions(c)
